@@ -297,7 +297,7 @@ Un solo panel con pestañas **abajo** (zona del pulgar) **Zona · Tendencias · 
 |---|---|
 | `stores/useDockStore.js` | `activeTab` (`null` = cerrado), `openTab(tab)`, `close()`. |
 | `components/dockRegistry.js` | `DOCK_TABS` (id, etiqueta, icono, niveles, scroll) y `DOCK_PANELS` (id → componente). Módulo nuevo = añadirlo aquí. |
-| `components/SideDock.jsx` | Contenedor responsive: columna que empuja el mapa (≥ lg), panel superpuesto a la derecha (sm–lg), hoja inferior (móvil). |
+| `components/SideDock.jsx` | Contenedor responsive: columna que empuja el mapa (≥ lg); en móvil/tablet, hoja inferior (56 % del alto) que se desliza **encima** del mapa sin cambiar el tamaño de su contenedor (el mapa no se reajusta ni se aleja). Se cierra con la flecha o arrastrando el asa hacia abajo. |
 | `components/AnalysisLauncher.jsx` | Botón «Ver análisis» (solo 2D, dock cerrado): sobre el borde mapa/barra de pasos, con halo pulsante e insignia de zonas seleccionadas. |
 | `hooks/useDockSync.js` | Abre «Zona» al entrar a un país en escritorio y la cierra al volver al globo. |
 

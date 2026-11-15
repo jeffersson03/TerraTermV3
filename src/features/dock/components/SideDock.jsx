@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useDragControls } from "framer-motion";
 import { ChevronDown, X } from "lucide-react";
 import { useDockStore } from "@/stores/useDockStore";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -7,13 +7,14 @@ import { DOCK_PANELS, getDockTabs } from "@/features/dock/components/dockRegistr
 
 const EASE = [0.22, 1, 0.36, 1];
 const PANEL_WIDTH = "28rem";
-const SHEET_HEIGHT = "56%";
+const SWIPE_CLOSE_PX = 90; // arrastre hacia abajo que cierra la hoja
 
 // Escritorio (lg): columna derecha que empuja el mapa.
-// Móvil y tablet: panel DEBAJO del mapa (el mapa se encoge, no queda tapado).
+// Móvil y tablet: hoja inferior que se desliza ENCIMA del mapa (56 % del alto, clase h-[56%]).
+// No cambia el tamaño del contenedor del mapa: así el mapa no se reajusta ni se aleja al abrirla.
 const VARIANTS = {
   desktop: { initial: { width: 0, opacity: 0 }, animate: { width: PANEL_WIDTH, opacity: 1 }, exit: { width: 0, opacity: 0 } },
-  stacked: { initial: { height: 0 }, animate: { height: SHEET_HEIGHT }, exit: { height: 0 } },
+  sheet: { initial: { y: "100%" }, animate: { y: 0 }, exit: { y: "100%" } },
 };
 
 // Pestañas abajo: zona de fácil alcance con el pulgar en móvil.
@@ -64,22 +65,46 @@ function SideDock({ level }) {
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const { t } = useT();
 
+  const dragControls = useDragControls();
+
   const tabs = getDockTabs(level);
   const current = tabs.find((tab) => tab.id === activeTab);
   const Content = current ? DOCK_PANELS[current.id] : null;
+
+  // Hoja inferior (móvil/tablet): se cierra al arrastrarla hacia abajo desde el asa
+  const handleDragEnd = (_event, info) => {
+    if (info.offset.y > SWIPE_CLOSE_PX || info.velocity.y > 600) close();
+  };
 
   return (
     <AnimatePresence initial={false}>
       {current && (
         <motion.aside
           id="side-dock"
-          key={`side-dock-${isDesktop ? "desktop" : "stacked"}`}
+          key={`side-dock-${isDesktop ? "desktop" : "sheet"}`}
           aria-label={t("dock.panel")}
-          {...(isDesktop ? VARIANTS.desktop : VARIANTS.stacked)}
+          {...(isDesktop ? VARIANTS.desktop : VARIANTS.sheet)}
           transition={{ duration: 0.4, ease: EASE }}
-          className="relative z-30 flex w-full shrink-0 flex-col overflow-hidden border-t border-hud-border bg-space-950/95 backdrop-blur-md lg:w-auto lg:border-l lg:border-t-0"
+          {...(isDesktop
+            ? {}
+            : { drag: "y", dragListener: false, dragControls, dragConstraints: { top: 0, bottom: 0 }, dragElastic: { top: 0, bottom: 0.6 }, onDragEnd: handleDragEnd })}
+          className={
+            isDesktop
+              ? "relative z-30 flex shrink-0 flex-col overflow-hidden border-l border-hud-border bg-space-950/95 backdrop-blur-md"
+              : "absolute inset-x-0 bottom-0 z-30 flex h-[56%] flex-col overflow-hidden rounded-t-2xl border-t border-hud-border bg-space-950/95 shadow-[0_-12px_40px_rgb(0_0_0/0.55)] backdrop-blur-md"
+          }
         >
-          <div className="flex h-full min-h-0 flex-col lg:w-[28rem]">
+          {/* Asa de la hoja (móvil/tablet): arrastrar hacia abajo para cerrar */}
+          {!isDesktop && (
+            <div
+              onPointerDown={(event) => dragControls.start(event)}
+              className="flex shrink-0 cursor-grab touch-none justify-center pb-1 pt-2 active:cursor-grabbing"
+              aria-hidden="true"
+            >
+              <span className="h-1.5 w-10 rounded-full bg-hud-border" />
+            </div>
+          )}
+          <div className="flex min-h-0 flex-1 flex-col lg:w-[28rem]">
             <div
               id="side-dock-panel"
               role="tabpanel"

@@ -1,0 +1,95 @@
+/* ==========================================================================
+   Sistema de diseño TerraTerm (skill Design) — Tailwind v4
+   1. Tokens fijos     → @theme         → bg-space-900, border-hud-border, text-terra-400…
+   2. Tokens de sensor → [data-sensor]  → cambian según la vista activa (terra | aqua)
+   3. Utilidades sensor→ @theme inline  → text-sensor-accent, bg-sensor-glow…
+   4. Variantes        → terra:… aqua:… → estilos exclusivos de una vista
+   ========================================================================== */
+
+/* 1. Tokens fijos ---------------------------------------------------------- */
+@theme {
+  /* Superficies y fondos aeroespaciales */
+  --color-space-950: #060b14;
+  --color-space-900: #0b1322;
+  --color-space-800: #111d33;
+  --color-hud-border: rgba(148, 163, 184, 0.18);
+  --color-hud-crosshair: rgba(148, 163, 184, 0.45);
+
+  /* Texto */
+  --color-ink: #f1f5f9;
+  --color-ink-secondary: #94a3b8;
+  --color-ink-muted: #475569;
+
+  /* Acentos de telemetría (fijos, por si un componente necesita uno concreto) */
+  --color-terra-400: #fbbf24;
+  --color-terra-500: #f59e0b;
+  --color-aqua-400: #38bdf8;
+  --color-aqua-500: #0ea5e9;
+  --color-classic-400: #34d399;
+  --color-classic-500: #34d399;
+
+  /* Tipografía técnica */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+/* 2. Tokens dinámicos según el sensor activo (Principio Abierto/Cerrado) ----
+   :root define la vista por defecto (classic), igual que DEFAULT_SENSOR_ID en
+   src/constants/sensors.js. Para añadir otra vista: un bloque [data-sensor="…"]
+   aquí + una entrada en sensors.js; ningún componente cambia. */
+:root,
+[data-sensor="classic"] {
+  --sensor-accent: var(--color-classic-400);
+  --sensor-accent-strong: var(--color-classic-500);
+  --sensor-glow: rgba(52, 211, 153, 0.25);
+}
+
+[data-sensor="terra"] {
+  --sensor-accent: var(--color-terra-400);
+  --sensor-accent-strong: var(--color-terra-500);
+  --sensor-glow: rgba(251, 191, 36, 0.25);
+}
+
+[data-sensor="aqua"] {
+  --sensor-accent: var(--color-aqua-400);
+  --sensor-accent-strong: var(--color-aqua-500);
+  --sensor-glow: rgba(56, 189, 248, 0.25);
+}
+
+/* 3. Utilidades que siguen al sensor activo ---------------------------------
+   `inline` es clave: la clase usa var(--sensor-accent) directamente, así se
+   resuelve en el elemento y respeta el data-sensor del contenedor más cercano. */
+@theme inline {
+  --color-sensor-accent: var(--sensor-accent);
+  --color-sensor-accent-strong: var(--sensor-accent-strong);
+  --color-sensor-glow: var(--sensor-glow);
+}
+
+/* 4. Variantes por vista: <div class="hidden aqua:block"> ------------------- */
+@custom-variant terra (&:where([data-sensor="terra"], [data-sensor="terra"] *));
+@custom-variant aqua (&:where([data-sensor="aqua"], [data-sensor="aqua"] *));
+@custom-variant classic (&:where([data-sensor="classic"], [data-sensor="classic"] *));
+/* Base --------------------------------------------------------------------- */
+@layer base {
+  html,
+  body {
+    background-color: var(--color-space-950);
+    color: var(--color-ink);
+  }
+}
+
+@keyframes hud-indicator {
+  0%, 100% {
+    opacity: 0.45;
+    transform: translateY(2px);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+}
+
+@utility animate-hud-indicator {
+  animation: hud-indicator 1.4s ease-in-out infinite;
+}

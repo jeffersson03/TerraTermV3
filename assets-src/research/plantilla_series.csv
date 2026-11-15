@@ -1,0 +1,3 @@
+region_id,variable_id,date,value,unit,source,product,version,spatial_method,resolution,url,retrieved_at,notes
+piura,precip,2017-03,0.0,mm/día,NASA GES DISC (Giovanni),GPM_3IMERGM,07,area_mean_bbox,0.1°,https://giovanni.gsfc.nasa.gov/,2026-11-15,EJEMPLO: reemplazar valor real
+puno,precip,2017-03,0.0,mm/día,NASA GES DISC (Giovanni),GPM_3IMERGM,07,area_mean_bbox,0.1°,https://giovanni.gsfc.nasa.gov/,2026-11-15,EJEMPLO: reemplazar valor real

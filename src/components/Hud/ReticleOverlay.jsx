@@ -1,0 +1,1 @@
+// Miras telescópicas / anillos concéntricos SVG

@@ -52,10 +52,12 @@ export const VARIABLES = Object.freeze({
     range: [-2, 32],
     palette: THERMAL_PALETTE,
     domain: "ocean",
-    source: "NASA GHRSST MUR (L4)",
+    source: "NASA GHRSST MUR (L4) · series: NASA POWER TS",
     resolution: "1 km · diaria",
     layer: { provider: "gibs", productId: "GHRSST_L4_MUR_Sea_Surface_Temperature" },
-    series: { provider: null, parameter: null }, // pendiente: definir fuente de series oceánicas
+    // Series: POWER TS sobre una celda de océano = temperatura de la superficie del mar (MERRA-2).
+    // Es el mismo producto del estudio Ica–Pisco (docs/analisis.md). GHRSST queda para la capa.
+    series: { provider: "power", parameter: "TS" },
     activities: ["pesca"],
   },
 });

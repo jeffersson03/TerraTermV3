@@ -1,15 +1,16 @@
 import { ENV } from "@/config/env";
 import { getVariable } from "@/constants/variables";
 import { getMockTimeSeries } from "@/services/mocks/mockTimeSeries";
+import { getPowerTimeSeries } from "@/services/nasa/powerTimeSeries";
 
 // Punto de entrada ÚNICO para datos ambientales. Los hooks llaman aquí y no
 // saben si la respuesta viene de un mock o de una API real.
 //
-// Fase 2: cuando exista services/nasa/powerService.js (u otro proveedor), se
-// registra en SERIES_PROVIDERS con la misma firma y se desactivan los mocks
-// con VITE_USE_MOCKS=false. Ningún componente cambia.
+// Cada variable declara su proveedor en constants/variables.js (`series.provider`).
+// Proveedor nuevo = registrarlo aquí con la misma firma. Ningún componente cambia.
+// Mocks solo si VITE_USE_MOCKS=true o si la variable aún no tiene proveedor real.
 const SERIES_PROVIDERS = {
-  // power: getPowerTimeSeries,
+  power: getPowerTimeSeries,
 };
 
 /**
@@ -24,5 +25,5 @@ export function getTimeSeries(query) {
   const provider = SERIES_PROVIDERS[variable.series.provider];
   if (ENV.useMocks || !provider) return getMockTimeSeries(query);
 
-  return provider(query);
+  return provider({ ...query, variable });
 }

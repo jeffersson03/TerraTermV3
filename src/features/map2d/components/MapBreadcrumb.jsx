@@ -13,7 +13,7 @@ function MapBreadcrumb({ countryName, selectedRegions, onBack }) {
         Mundo
       </button>
       <span className="text-ink-muted">/</span>
-      <span className="font-semibold text-ink">{countryName}</span>
+      <span className="truncate font-semibold text-ink">{countryName}</span>
       {selectedRegions.map((region) => (
         <span key={region.id} data-sensor={region.sensorId} className="hidden items-center gap-2 sm:flex">
           <span className="text-ink-muted">/</span>

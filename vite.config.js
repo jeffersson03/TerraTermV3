@@ -14,4 +14,6 @@ export default defineConfig({
   // import.meta.url en lugar de __dirname: el proyecto es ESM ("type": "module")
   // y ESLint no reconoce __dirname como global.
   resolve: { alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) } },
+  // En desarrollo, /api se reenvía al servidor del asistente IA (server/index.js, puerto 3001).
+  server: { proxy: { "/api": "http://localhost:3001" } },
 });

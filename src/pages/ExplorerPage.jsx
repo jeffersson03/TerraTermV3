@@ -1,13 +1,14 @@
 import { AnimatePresence, motion } from "framer-motion";
+import SideDock from "@/features/dock/components/SideDock";
+import DockToggle from "@/features/dock/components/DockToggle";
+import { useDockSync } from "@/features/dock/hooks/useDockSync";
 import GlobeCanvas from "@/features/globe/components/GlobeCanvas";
 import DomainSwitcher from "@/features/globe/components/DomainSwitcher";
-import LayerStatusPanel from "@/features/globe/components/LayerStatusPanel";
 import SensorConsole from "@/features/globe/components/SensorConsole";
 import HoverProbe from "@/features/probe/components/HoverProbe";
 import { useDomainShortcut } from "@/features/globe/hooks/useDomainShortcut";
 import CountryMap2D from "@/features/map2d/components/CountryMap2D";
 import MapBreadcrumb from "@/features/map2d/components/MapBreadcrumb";
-import FlowPanel from "@/features/explorer/components/FlowPanel";
 import FlowTimeline from "@/features/explorer/components/FlowTimeline";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
 import { useCountryEntry } from "@/features/explorer/hooks/useCountryEntry";
@@ -19,11 +20,12 @@ import { getCountry } from "@/constants/countries";
 const FADE = { duration: 0.6, ease: [0.22, 1, 0.36, 1] };
 
 // Página del explorador:
-//   1. Globo completo (sin barra ni panel). Clic en un país → vuelo de cámara.
-//   2. Fundido al mapa 2D fijo del país; aparecen panel derecho y barra de pasos.
+//   1. Globo completo. Clic en un país → vuelo de cámara.
+//   2. Fundido al mapa 2D fijo del país; aparece la barra de pasos y (en escritorio) el dock en «Zona».
 //   3. "← Mundo" o Escape: fundido inverso y la cámara se aleja.
 // HUD: en el globo, una sola consola (emblema + selector + capa); en el 2D,
 // selector arriba y capa abajo. La sonda que sigue al cursor es común a ambos.
+// Dock lateral (hamburguesa arriba a la derecha): Zona · Tendencias · Asistente, uno a la vez.
 function ExplorerPage() {
   const level = useExplorerStore((state) => state.level);
   const countryId = useExplorerStore((state) => state.countryId);
@@ -35,6 +37,7 @@ function ExplorerPage() {
   useDomainShortcut();
   useSelectionPruning();
   useFlowKeyboard();
+  useDockSync(level);
 
   const isGlobe = level === "globe";
   const country = getCountry(countryId);
@@ -42,7 +45,8 @@ function ExplorerPage() {
   return (
     <div className="absolute inset-0 flex flex-col">
       <div className="relative flex min-h-0 flex-1">
-        <section className="relative min-w-0 flex-1 overflow-hidden" aria-label={isGlobe ? "Globo terráqueo interactivo" : `Mapa de ${country?.name}`}>
+        {/* @container: el HUD se acomoda al ancho real del mapa (cambia cuando el dock está abierto) */}
+        <section className="@container relative min-w-0 flex-1 overflow-hidden" aria-label={isGlobe ? "Globo terráqueo interactivo" : `Mapa de ${country?.name}`}>
           {/* Nivel 1: globo (sigue montado pero deja de renderizar al ocultarse) */}
           <motion.div
             className="absolute inset-0"
@@ -90,7 +94,7 @@ function ExplorerPage() {
             {!isGlobe && (
               <motion.div
                 key="map-switcher"
-                className="absolute left-1/2 top-5 z-20 -translate-x-1/2"
+                className="absolute left-1/2 top-[4.25rem] z-20 -translate-x-1/2 @4xl:top-5"
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
@@ -104,7 +108,7 @@ function ExplorerPage() {
           <AnimatePresence>
             {!isGlobe && country && (
               <motion.div
-                className="absolute left-4 top-5 z-20"
+                className="absolute left-4 top-4 z-20 max-w-[calc(100%-5rem)] sm:top-5"
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
@@ -118,7 +122,7 @@ function ExplorerPage() {
             {notice && (
               <motion.p
                 role="status"
-                className="absolute left-1/2 top-20 z-20 -translate-x-1/2 rounded-full border border-hud-border bg-space-900/90 px-4 py-1.5 text-xs text-ink-secondary"
+                className="absolute left-1/2 top-32 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-full border text-center @4xl:top-20 border-hud-border bg-space-900/90 px-4 py-1.5 text-xs text-ink-secondary"
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
@@ -128,13 +132,16 @@ function ExplorerPage() {
             )}
           </AnimatePresence>
 
-          {!isGlobe && <LayerStatusPanel domain={domain} level={level} />}
+          {/* En el mapa 2D la leyenda la pone CountryMap2D (tendencia térmica real) */}
+
+          {/* Hamburguesa: abre/cierra el dock lateral (común a globo y mapa 2D) */}
+          <DockToggle level={level} className="absolute right-4 top-4 z-20 sm:top-5" />
         </section>
 
         {/* Sonda que sigue al cursor (globo y mapa 2D); posición fija en la ventana */}
         <HoverProbe />
 
-        <FlowPanel />
+        <SideDock level={level} />
       </div>
 
       {/* La barra de pasos solo existe en el mapa 2D */}

@@ -1,3 +1,4 @@
 @import "tailwindcss";
 @import "./styles/theme.css";
+@import "./features/assistant/styles/assistant-theme.css";
 

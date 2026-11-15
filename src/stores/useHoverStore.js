@@ -9,7 +9,7 @@ function roundCoord(value) {
 
 function isSameHover(a, b) {
   return (
-    a && b && a.lat === b.lat && a.lon === b.lon && a.country === b.country && a.screenX === b.screenX && a.screenY === b.screenY
+    a && b && a.lat === b.lat && a.lon === b.lon && a.country === b.country && a.regionId === b.regionId && a.screenX === b.screenX && a.screenY === b.screenY
   );
 }
 
@@ -17,13 +17,14 @@ function isSameHover(a, b) {
 // cambia hasta ~60 veces por segundo, así que solo deben suscribirse
 // componentes pequeños (HoverProbe, CountryBorders), nunca paneles grandes.
 export const useHoverStore = create((set, get) => ({
-  // { lat, lon, country, screenX, screenY } | null
+  // { lat, lon, country, regionId, screenX, screenY } | null
   // screenX/Y = posición del puntero en la ventana (clientX/clientY), para la sonda
+  // regionId  = zona del mapa 2D bajo el cursor (null en el globo)
   hoveredLocation: null,
   hoveredFeature: null, // Feature GeoJSON del país bajo el cursor (globo) | null
 
-  setHoveredLocation: ({ lat, lon, country, screenX = null, screenY = null }) => {
-    const next = { lat: roundCoord(lat), lon: roundCoord(lon), country, screenX, screenY };
+  setHoveredLocation: ({ lat, lon, country, regionId = null, screenX = null, screenY = null }) => {
+    const next = { lat: roundCoord(lat), lon: roundCoord(lon), country, regionId, screenX, screenY };
     if (isSameHover(get().hoveredLocation, next)) return;
     set({ hoveredLocation: next });
   },

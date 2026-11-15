@@ -32,7 +32,7 @@ function DomainSwitcher({ domain, onChange, variant = "floating", pillId = "doma
             title={item.description}
             onClick={() => onChange(key)}
             className={`
-              group relative py-2 rounded-md ${isEmbedded ? "flex flex-1 justify-center px-2" : "px-4"}
+              group relative py-2 rounded-md ${isEmbedded ? "flex flex-1 justify-center px-2" : "px-3 sm:px-4"}
               font-mono text-xs tracking-wider
               transition-colors duration-300 cursor-pointer
               focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-sensor-accent
@@ -82,7 +82,7 @@ function DomainSwitcher({ domain, onChange, variant = "floating", pillId = "doma
               <span className="flex items-center gap-1.5">
                 <span className="font-semibold">{item.label}</span>
                 <span
-                  className={`text-[11px] ${
+                  className={`hidden text-[11px] sm:inline ${
                     isActive ? "text-sensor-accent" : "opacity-60"
                   }`}
                 >

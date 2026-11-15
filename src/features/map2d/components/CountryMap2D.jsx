@@ -6,9 +6,20 @@ import { useHoverStore } from "@/stores/useHoverStore";
 import { useElementSize } from "@/hooks/useElementSize";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
 import { useCountryRegions } from "@/features/map2d/hooks/useCountryRegions";
+import { useFiltersStore } from "@/stores/useFiltersStore";
 import ThermalRasterLayer from "@/features/map2d/components/ThermalRasterLayer";
 import RegionLayer from "@/features/map2d/components/RegionLayer";
 import SelectionLabels from "@/features/map2d/components/SelectionLabels";
+import TrendChoroplethLayer from "@/features/map2d/components/TrendChoroplethLayer";
+import TrendLegendPanel from "@/features/map2d/components/TrendLegendPanel";
+import { useTrendMap } from "@/features/map2d/hooks/useTrendMap";
+import { useTrendMapStore } from "@/features/map2d/hooks/useTrendMapStore";
+
+// Qué zonas se colorean con la tendencia según la vista: Global ambas, Terra tierra, Aqua mar.
+function trendScope(map2d) {
+  if (map2d.land && map2d.ocean) return "both";
+  return map2d.land ? "land" : "ocean";
+}
 
 // Márgenes para no quedar bajo los controles HUD (selector arriba, paneles abajo)
 const PADDING = { top: 72, right: 24, bottom: 24, left: 24 };
@@ -38,6 +49,12 @@ function CountryMap2D({ countryId }) {
   const setHoveredLocation = useHoverStore((state) => state.setHoveredLocation);
   const clearHover = useHoverStore((state) => state.clearHover);
   const [hoveredRegion, setHoveredRegion] = useState(null);
+  const period = useFiltersStore((state) => state.period);
+  const trendStatus = useTrendMapStore((state) => state.status);
+  const trends = useTrendMapStore((state) => state.trends);
+  useTrendMap({ regions, period });
+  const scope = trendScope(sensor.map2d);
+  const hasTrends = trendStatus === "ready";
 
   const isReady = regions.status === "ready" && width > 0 && height > 0;
   const projection = useMemo(
@@ -54,6 +71,7 @@ function CountryMap2D({ countryId }) {
       lat,
       lon,
       country: hoveredRegion?.kind === "land" ? hoveredRegion.label : null, // null = océano
+      regionId: hoveredRegion?.id ?? null, // la sonda muestra la tendencia real de esta zona
       screenX: event.clientX,
       screenY: event.clientY,
     });
@@ -74,7 +92,22 @@ function CountryMap2D({ countryId }) {
 
       {projection && (
         <>
-          <ThermalRasterLayer projection={projection} viewBbox={regions.viewBbox} map2d={sensor.map2d} />
+          {/* Textura ilustrativa: solo de fondo tenue mientras llega la tendencia real; luego se oculta */}
+          <div className={`absolute inset-0 transition-opacity duration-700 ${hasTrends ? "opacity-0" : "opacity-40"}`}>
+            <ThermalRasterLayer projection={projection} viewBbox={regions.viewBbox} map2d={sensor.map2d} />
+          </div>
+          {hasTrends && (
+            <TrendChoroplethLayer
+              projection={projection}
+              width={width}
+              height={height}
+              landRegions={regions.landRegions}
+              oceanRegions={regions.oceanRegions}
+              showLand={scope !== "ocean"}
+              showOcean={scope !== "land"}
+              trends={trends}
+            />
+          )}
           <RegionLayer
             projection={projection}
             width={width}
@@ -87,7 +120,8 @@ function CountryMap2D({ countryId }) {
             onToggle={toggleRegion}
             onHover={setHoveredRegion}
           />
-          <SelectionLabels projection={projection} selectedRegions={selectedRegions} />
+          <SelectionLabels projection={projection} width={width} selectedRegions={selectedRegions} />
+          <TrendLegendPanel scope={scope} />
         </>
       )}
 

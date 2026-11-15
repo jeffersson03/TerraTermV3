@@ -1,0 +1,11 @@
+/* Colores del asistente como utilidades de Tailwind v4 (bg-bot-navy, text-bot-accent-soft…).
+   Importar este archivo en el CSS principal de la app:  @import "./features/assistant/styles/assistant-theme.css"; */
+@theme {
+  --color-bot-accent: #1a73c2;      /* azul intenso */
+  --color-bot-accent-soft: #4da8f0; /* celeste */
+  --color-bot-teal: #084054;        /* azul petróleo */
+  --color-bot-navy: #052e3d;        /* azul marino */
+  --color-bot-deep: #03212c;        /* azul marino más oscuro */
+  --color-bot-ink: #f1f6f8;         /* texto */
+  --color-bot-ink-soft: #a9c3cc;    /* texto secundario */
+}

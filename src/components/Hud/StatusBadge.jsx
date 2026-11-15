@@ -1,8 +1,13 @@
 import { getDataKind } from "@/constants/dataKinds";
 
-// Etiqueta del tipo de información (observación, estimación, IA, prototipo…).
+// Kinds que no muestran etiqueta. «Prototipo visual» se ocultó para limpiar la interfaz;
+// la procedencia sigue visible en la fuente y la nota de cada capa (LayerInfo).
+const HIDDEN_KINDS = new Set(["prototype"]);
+
+// Etiqueta del tipo de información (observación, estimación, IA…).
 // Reutilizable en capas, indicadores, gráficos y respuestas del asistente.
 function StatusBadge({ kind, label, className = "" }) {
+  if (HIDDEN_KINDS.has(kind)) return null;
   const dataKind = getDataKind(kind);
 
   return (

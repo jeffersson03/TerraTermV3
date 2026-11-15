@@ -4,6 +4,9 @@ import { useHoverStore } from "@/stores/useHoverStore";
 import { useTelemetryStore } from "@/stores/useTelemetryStore";
 import { useViewportSize } from "@/hooks/useViewportSize";
 import { useProbeReading } from "@/features/probe/hooks/useProbeReading";
+import { useTrendMapStore } from "@/features/map2d/hooks/useTrendMapStore";
+import { trendColor } from "@/features/map2d/utils/trendColor";
+import { formatSigned } from "@/utils/formatValues";
 import { formatLatitude, formatLongitude } from "@/utils/formatCoordinates";
 import { formatNumber } from "@/utils/formatValues";
 
@@ -36,6 +39,8 @@ function HoverProbe() {
   const domain = useTelemetryStore((state) => state.domain);
   const sensor = getSensor(domain);
   const reading = useProbeReading(location, sensor);
+  // Mapa 2D: tendencia térmica real de la zona bajo el cursor (NASA POWER), si ya está calculada
+  const regionTrend = useTrendMapStore((state) => (location?.regionId ? state.trends.get(location.regionId) : null))?.trend;
   const viewport = useViewportSize();
 
   const isVisible = Boolean(location && location.screenX !== null);
@@ -61,15 +66,22 @@ function HoverProbe() {
       >
         <p className="truncate text-sm font-semibold text-ink">{placeName}</p>
 
-        {reading?.variable && (
+        {regionTrend?.slopePerDecade != null && (
+          <p className="mt-1 flex items-center gap-2 font-mono text-xs tabular-nums">
+            <span className="h-2.5 w-2.5 shrink-0 rounded-[2px] ring-1 ring-ink/20" style={{ background: trendColor(regionTrend.slopePerDecade) }} />
+            <span className="text-sensor-accent">TS</span>
+            <span className="text-ink">{formatSigned(regionTrend.slopePerDecade)} °C/déc</span>
+            <span className="text-[10px] text-ink-muted">{regionTrend.isSignificant ? "signif." : "no signif."}</span>
+          </p>
+        )}
+
+        {!regionTrend && reading?.variable && (
           <p className="mt-1 flex items-center gap-2 font-mono text-xs tabular-nums">
             <span className="h-2.5 w-2.5 shrink-0 rounded-[2px] ring-1 ring-ink/20" style={{ background: reading.color }} />
             <span className="text-sensor-accent">{reading.variable.shortLabel}</span>
             <span className="text-ink">
               {formatNumber(reading.value)} {reading.variable.unit}
-            </span>
-            {sensor.map2d.kind === "prototype" && <span className="text-[10px] text-ink-muted">ilustr.</span>}
-          </p>
+            </span>          </p>
         )}
 
         <p className="mt-1 font-mono text-[10px] tabular-nums text-ink-muted">

@@ -1,0 +1,44 @@
+/* Barra de desplazamiento del chat con la paleta del asistente:
+   delgada, redondeada, sin flechas. Riel azul petróleo, barra celeste → azul intenso al tocarla. */
+
+.bot-scroll {
+  scrollbar-gutter: stable;
+}
+
+/* Chrome, Edge, Safari */
+.bot-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.bot-scroll::-webkit-scrollbar-track {
+  margin: 8px 0;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-color: rgb(255 255 255 / 0.04);
+  background-clip: padding-box;
+}
+.bot-scroll::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-color: #4da8f0;
+  background-clip: padding-box;
+}
+.bot-scroll::-webkit-scrollbar-thumb:hover,
+.bot-scroll::-webkit-scrollbar-thumb:active {
+  border-width: 1px;
+  background-color: #1a73c2;
+}
+.bot-scroll::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+}
+.bot-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox (no soporta los selectores ::-webkit-) */
+@supports not selector(::-webkit-scrollbar) {
+  .bot-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: #4da8f0 transparent;
+  }
+}

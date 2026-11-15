@@ -31,11 +31,15 @@ index.html
  └─ src/main.jsx            → monta React y carga los estilos globales
      └─ src/App.jsx         → RouterProvider
          └─ appRouter       → ruta "/"
-             └─ ExplorerLayout     (barra HUD + área de trabajo)
+             └─ ExplorerLayout     (barra fija con el logo + área de trabajo + robot del asistente)
                  └─ ExplorerPage   (página del explorador)
                      └─ GlobeCanvas      (escena 3D)
                          └─ EarthGlobe   (planeta)
                              └─ GlobeGraticule (retícula lat/lon)
+                     └─ DockToggle + SideDock (hamburguesa → panel lateral, un módulo a la vez)
+                         ├─ Zona        → FlowPanel (solo en el mapa 2D)
+                         ├─ Tendencias  → AnalysisPanel → TrendExplorer (lazy: NASA POWER / IMERG)
+                         └─ Asistente   → AssistantChat
 ```
 
 El usuario entra **directo al explorador** (no hay landing page).
@@ -182,8 +186,24 @@ Todo módulo nuevo se apoya en estos archivos. Cambios aquí se avisan al equipo
 | `config/env.js` | `ENV.useMocks`, `ENV.apiBaseUrl`. Variables en `.env.local` (plantilla: `.env.example`). Nada privado con prefijo `VITE_`. |
 | `services/api/httpClient.js` | `getJson(url, { params, cacheTtlMs, retries, timeoutMs, signal })`, `postJson`, `HttpError` (`code`: `TIMEOUT`, `NETWORK`, `HTTP_ERROR`, `PARSE_ERROR`, `ABORTED`). |
 | `services/api/serviceResponse.js` | `createServiceResponse(data, meta)`: formato único `{ data, meta }`; valida `variableId`, `source`, `unit`, `period`, `kind`. |
-| `services/environmentalDataService.js` | `getTimeSeries({ variableId, location, period, signal })`: punto de entrada único; hoy usa mocks. |
-| `services/mocks/mockTimeSeries.js` | Series simuladas reproducibles (misma ubicación → misma serie), marcadas `kind: 'prototype'`. |
+| `services/environmentalDataService.js` | `getTimeSeries({ variableId, location, period, signal })`: punto de entrada único. Usa el proveedor de `variable.series.provider` (hoy `power`); mocks solo con `VITE_USE_MOCKS=true` o si la variable no tiene proveedor. |
+| `services/nasa/powerTimeSeries.js` | Adaptador NASA POWER → `{ data, meta }`: serie **mensual real** (`YYYY-MM`) del parámetro de la variable (`precip` → `PRECTOTCORR`, `lst` y `sst` → `TS`), `kind: 'estimate'` (reanálisis MERRA-2). Una llamada por celda trae las 3 variables y queda en caché; peticiones simultáneas a la misma celda se unen. |
+| `services/mocks/mockTimeSeries.js` | Series simuladas reproducibles (misma ubicación → misma serie), marcadas `kind: 'prototype'`. Solo para desarrollo sin conexión. |
+
+**Mapa 2D dinámico:** los paneles Celda, Comparar, Periodo y Correlación y las etiquetas de las zonas seleccionadas (`map2d/components/SelectionLabels.jsx`, «A · Piura · ▲ +0,17 °C/déc») usan la tendencia real del centro de cada zona y cambian al cambiar zona, variable o periodo.
+
+**Mapa de tendencia térmica real (fondo del 2D):** cada departamento y celda de mar se pinta con su tendencia de `TS` (°C/década, NASA POWER) en una escala divergente azul → rojo (`TREND_PALETTE`, ±0,5 °C/déc). Opaco = significativa (Mann-Kendall p < 0,05, ≥ 10 años); tenue = no significativa. Global pinta tierra y mar, Terra solo departamentos, Aqua solo mar. La textura ilustrativa solo se ve tenue mientras carga.
+
+| Archivo | Responsabilidad |
+|---|---|
+| `services/nasa/powerRegionalService.js` | API mensual **regional** de POWER (rejilla 0,5° × 0,625°). Límites comprobados: 2°–10° por eje y 1 parámetro → la vista se parte en mosaicos iguales (Perú: 6), de dos en dos, con caché. |
+| `features/map2d/utils/trendGrid.js` | Asigna los puntos de la rejilla a cada zona (dentro del polígono / recuadro; si ninguno, el más cercano ≤ 1°), promedia su serie anual y calcula la tendencia con `trendStats.js` (mismo motor que los paneles). |
+| `features/map2d/hooks/useTrendMap.js` + `useTrendMapStore.js` | Descarga y cálculo por país + periodo de filtros; estado compartido con la leyenda y la sonda. |
+| `features/map2d/components/TrendChoroplethLayer.jsx` | Capa SVG de color (debajo de `RegionLayer`, que sigue gestionando selección y hover). |
+| `features/map2d/components/TrendLegendPanel.jsx` | Leyenda, progreso de descarga, reintento, periodo y fuente. Reemplaza a `LayerStatusPanel` en el 2D. |
+| `features/map2d/utils/trendColor.js` | Color y opacidad por pendiente/significancia. |
+
+La sonda (`HoverProbe`) muestra en el 2D la tendencia real de la zona bajo el cursor (`useHoverStore.regionId`).
 | `hooks/useEnvironmentalData.js` | `{ data, meta, isLoading, error, isEmpty, isStale, retry }`. Cancela la petición anterior al cambiar la consulta. |
 | `features/assistant/constants/mapActions.js` | Tipos de acción del asistente sobre el mapa (`SET_LOCATION`, `SET_VARIABLE`, `SET_PERIOD`, `SET_DOMAIN`). |
 
@@ -237,7 +257,21 @@ Al cambiar de vista se descartan las zonas que la nueva vista no permite. Zona A
 | `hooks/useSelectionContext.js` | Zonas seleccionadas + variable común + periodo + `isCrossKind`. |
 | `hooks/useSelectionPruning.js`, `hooks/useFlowKeyboard.js` | Depurar selección al cambiar de vista; teclado (← → Escape). |
 | `utils/resolvePresetZones.js` | Convierte las comparaciones de ejemplo (`PRESET_COMPARISONS`) en regiones del mapa. |
-| `components/FlowTimeline.jsx`, `components/FlowPanel.jsx` | Barra de pasos (solo en 2D) y panel con transiciones. |
+| `components/FlowTimeline.jsx`, `components/FlowPanel.jsx` | Barra de pasos (solo en 2D) y contenido del panel con transiciones (se muestra en la pestaña «Zona» del dock). |
+
+### Dock lateral — `src/features/dock/` + `src/stores/useDockStore.js`
+
+Un solo panel a la derecha con pestañas **Zona · Tendencias · Asistente**: muestra un módulo a la vez para que el chat y la información no se superpongan. Se abre con la hamburguesa (arriba a la derecha del mapa) o con el robot (abre «Asistente»).
+
+| Archivo | Responsabilidad |
+|---|---|
+| `stores/useDockStore.js` | `activeTab` (`null` = cerrado), `openTab(tab)`, `close()`. |
+| `components/dockRegistry.js` | `DOCK_TABS` (id, etiqueta, icono, niveles, scroll) y `DOCK_PANELS` (id → componente). Módulo nuevo = añadirlo aquí. |
+| `components/SideDock.jsx` | Contenedor responsive: columna que empuja el mapa (≥ lg), panel superpuesto a la derecha (sm–lg), hoja inferior (móvil). |
+| `components/DockToggle.jsx` | Botón hamburguesa (abre «Zona» en el país y «Tendencias» en el globo). |
+| `hooks/useDockSync.js` | Abre «Zona» al entrar a un país en escritorio y la cierra al volver al globo. |
+
+Responsive del HUD: la sección del mapa es un `@container`; el selector Global/Terra/Aqua baja bajo la ruta «← Mundo / País» cuando el mapa mide menos de 56rem (p. ej. con el dock abierto o en móvil). Las etiquetas «Prototipo visual» se ocultan en `StatusBadge` (la fuente y la nota de cada capa siguen visibles).
 | `components/panelRegistry.js` | `PANELS` + `resolvePanelId` (Comparar/Periodo tierra + mar → `correlation`). |
 | `components/panels/*` | `CountryPanel`, `CellPanel`, `ComparePanel`, `PeriodPanel`, `CityPanel`, `CorrelationPanel`, bloque `RegionComparison`. Toleran selecciones vacías durante la animación de salida. |
 
@@ -266,6 +300,49 @@ Compartidos nuevos: `constants/countries.js` (países con 2D), `constants/textur
 | `utils/detectDipole.js` | `dipole` / `partial` / `same` / `insufficient` entre dos tendencias. |
 | `hooks/useRegionTrend.js` | Datos + serie anual + tendencia de una región (contrato común de datos). |
 | `components/*` | `TrendTile`, `SignificanceBadge`, `DipoleVerdict`. |
+
+#### Análisis con datos reales (NASA POWER / GPM IMERG)
+
+Módulo independiente del explorador, en la pestaña **Tendencias** del dock lateral (globo y mapa 2D). Ficha metodológica completa: [`docs/analisis.md`](docs/analisis.md).
+
+| Archivo | Responsabilidad |
+|---|---|
+| `data/ica-pisco.json` | Series mensuales verificadas. POWER Ica: `T2M`, `TS`, `PRECTOTCORR` 1981–2025 · POWER mar frente a Pisco: `TS` 1981–2025 · GPM IMERG (vía USF) Ica 2003–2025 (2025 hasta septiembre). |
+| `utils/study.js` | Catálogo del estudio (`variables`, `places`, `sources`), agregación anual (`annualSeries`), `analyzeStudy`, `june2025`. Importa el servicio con ruta relativa porque lo usan los tests de Node. |
+| `utils/trend.js` | Motor del módulo: OLS + IC Newey–West (Bartlett, 2 rezagos), Mann–Kendall con empates, pendiente de Sen, atípicos (MAD), `findLevelShift`. |
+| `utils/format.js` | `format`, `signed`, `precision` (formato es-ES con signo menos tipográfico). |
+| `hooks/usePowerPlace.js` | Estado de la consulta en vivo (`idle` / `loading` / `ready` / `error`). |
+| `components/AnalysisPanel.jsx` | Contenido de la pestaña «Tendencias»; carga `TrendExplorer` en diferido con `Suspense` y un error boundary. |
+| `components/TrendExplorer.jsx` | Selector de variable, lugar y periodo; formulario de consulta en vivo. |
+| `components/TrendChart.jsx` | Gráfico SVG anual con tendencia y tabla de valores. |
+| `components/TrendResults.jsx` | Veredicto, IC, p, avisos (periodo corto, cambio de nivel) y ficha de procedencia. |
+
+Servicio: `services/nasa/powerService.js` — único punto de acceso a la API mensual por punto de NASA POWER (pública, sin clave). `powerUrl`, `powerCell` (rejilla MERRA-2 0,5° × 0,625°), `parsePowerMonthly`, `fetchPowerMonthly` (límite 30 s, caché en memoria, errores con `code`: `invalid`, `timeout`, `network`, `rejected`, `http`, `format`).
+
+Deuda técnica: `utils/trend.js` (módulo de datos reales) y `utils/trendStats.js` (explorador) conviven con dos implementaciones; las variables `T2M`/`TS`/`PRECTOTCORR` de `study.js` no están unificadas con `constants/variables.js`. Consolidar en una fase posterior.
+
+### Asistente IA — `src/features/assistant/` y `server/`
+
+Robot flotante con chat en streaming. Montado en `ExplorerLayout` (`AssistantProvider` envuelve el layout y `AssistantFab` va al final). Usa tokens propios `bot-*` (`styles/assistant-theme.css`, importado en `index.css`), así que no toca `space-*`, `hud-*` ni `sensor-*`.
+
+| Archivo | Responsabilidad |
+|---|---|
+| `index.js` | API pública: `AssistantProvider`, `AssistantFab`, `RobotMascot`. |
+| `AssistantProvider.jsx` | `AssistantRuntimeProvider` + `useLocalRuntime(chatAdapter)` (`@assistant-ui/react`). |
+| `components/AssistantFab.jsx` | Robot fijo: abre la pestaña «Asistente» del dock. Se oculta con el dock abierto y en móvil (ahí se usa la hamburguesa). Prop `position` (en el mapa 2D sube a `bottom-28` para no tapar `FlowTimeline`). |
+| `components/AssistantChat.jsx` | Cabecera (mascota + estado) + `Thread`; contenido de la pestaña «Asistente». |
+| `components/Thread.jsx` | Mensajes, sugerencias y caja de texto. |
+| `components/MarkdownText.jsx` | Markdown GFM con estilos del asistente. |
+| `components/RobotMascot.jsx` + `styles/robotMascot.css` | Mascota SVG con 6 estados (`idle`, `listening`, `thinking`, `speaking`, `happy`, `error`). |
+| `hooks/useRobotMood.js` | Estado del chat → estado de la mascota. |
+| `services/chatAdapter.js` | `POST /api/chat` en streaming; envía `{ messages, context }`. |
+| `utils/buildAssistantContext.js` | Lee (sin modificar) `useExplorerStore`, `useFiltersStore`, `useMapStore` y `useTelemetryStore` y arma el contexto de la vista. |
+| `prompts/systemPrompt.js` | Prompt de sistema; lo importa el servidor. |
+| `constants/mapActions.js` | Contrato de acciones sobre el mapa (aún sin dispatcher). |
+
+Servidor `server/index.js` (Express + AI SDK): `GET /api/health` → `{ ok, mode: "ia"|"demo", provider, model }`; `POST /api/chat` → texto en streaming, `400` sin mensajes, `502` con mensaje claro. Proveedor por `.env` (`AI_PROVIDER` = `google` | `groq` | `openai`, `AI_MODEL`, key del proveedor, `PORT`, `AI_TIMEOUT_MS`). Sin key funciona en **modo demo**. El contexto del cliente se anexa al prompt (máx. 2000 caracteres) marcado como "no son mediciones". La key vive solo en el servidor; en desarrollo Vite reenvía `/api` a `localhost:3001`.
+
+`useAssistantStore` se conserva sin uso (el chat vive en el runtime de assistant-ui); queda para historial/persistencia.
 
 ### Gráficos — `src/components/charts/`
 
@@ -297,7 +374,7 @@ Compartidos nuevos: `constants/countries.js` (países con 2D), `constants/textur
 | Carpeta | Qué irá ahí |
 |---|---|
 | `src/features/` | `filters/`, `dashboard/`, `alerts/`, `assistant/`, `history/` (misma estructura que `globe/`). |
-| `src/services/nasa/` | Adaptadores GIBS / POWER (Fase 2), con la firma de `getTimeSeries`. |
+| `src/services/nasa/` | Ya contiene `powerService.js` (NASA POWER mensual). Falta: GIBS y adaptar POWER a la firma de `getTimeSeries`. |
 | `src/services/geospatial/` | Geocodificación (buscar lugar ↔ coordenadas). |
 | `src/providers/`, `src/assets/` | Si se necesitan. |
 
@@ -346,9 +423,12 @@ Compartidos nuevos: `constants/countries.js` (países con 2D), `constants/textur
 
 ```bash
 npm install     # instalar dependencias
-npm run dev     # servidor de desarrollo
+npm run dev     # web (5173) + servidor del asistente IA (3001)
+npm run dev:web # solo la web
+npm run dev:api # solo el servidor del asistente
 npm run build   # build de producción
 npm run lint    # revisar con ESLint
+npm test        # tests de datos reales y tendencias (node --test, tests/*.test.mjs)
 ```
 
 ---
@@ -357,12 +437,17 @@ npm run lint    # revisar con ESLint
 
 - [ ] Estado compartido (`stores/`) para mapa, filtros y asistente.
 - [ ] Catálogo de variables en `constants/` (empezar por temperatura superficial LST/SST).
-- [ ] Cliente HTTP y adaptador NASA (GIBS para texturas, POWER para series).
+- [x] Adaptador NASA POWER para series mensuales (`services/nasa/powerService.js`).
+- [ ] Adaptador GIBS para texturas.
+- [ ] Consolidar `analysis/utils/trend.js` y `analysis/utils/trendStats.js` en un solo motor.
 - [ ] Textura real de la Tierra y capa térmica sobre el globo.
 - [ ] Panel de filtros (ubicación, variable, periodo) y leyenda.
 - [ ] Dashboard de indicadores y gráficos.
 - [ ] Alertas por umbral.
-- [ ] Asistente IA conectado al mapa (vía backend).
+- [x] Asistente IA vía backend (`server/index.js`), con contexto de la vista actual.
+- [ ] Acciones del asistente sobre el mapa (`mapActions.js` + `dispatchMapActions.js`, tool calling).
+- [ ] Inyectar datos reales (p. ej. resultados de `analysis/utils/study.js`) en el contexto del asistente.
+- [ ] Reverse proxy de `/api` y rate limit para producción.
 - [ ] Layout responsive (móvil: paneles como hojas inferiores).
 
 

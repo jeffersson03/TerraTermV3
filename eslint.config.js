@@ -18,4 +18,9 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Servidor del asistente IA: corre en Node (usa process, etc.)
+    files: ['server/**/*.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])

@@ -14,6 +14,16 @@ import TrendChoroplethLayer from "@/features/map2d/components/TrendChoroplethLay
 import TrendLegendPanel from "@/features/map2d/components/TrendLegendPanel";
 import { useTrendMap } from "@/features/map2d/hooks/useTrendMap";
 import { useTrendMapStore } from "@/features/map2d/hooks/useTrendMapStore";
+import { useDockStore } from "@/stores/useDockStore";
+
+// Rectángulo del mapa dibujado (bbox proyectado): la leyenda toma exactamente su ancho.
+function legendStyle(projection, viewBbox, isLauncherVisible) {
+  const [west, south, east, north] = viewBbox;
+  const [x0] = projection([west, north]);
+  const [x1] = projection([east, south]);
+  const bottom = isLauncherVisible ? LEGEND_BOTTOM.launcherVisible : LEGEND_BOTTOM.launcherHidden;
+  return { left: x0, width: x1 - x0, bottom };
+}
 
 // Qué zonas se colorean con la tendencia según la vista: Global ambas, Terra tierra, Aqua mar.
 function trendScope(map2d) {
@@ -21,8 +31,10 @@ function trendScope(map2d) {
   return map2d.land ? "land" : "ocean";
 }
 
-// Márgenes para no quedar bajo los controles HUD (selector arriba, paneles abajo)
-const PADDING = { top: 72, right: 24, bottom: 24, left: 24 };
+// Márgenes para no quedar bajo los controles HUD: arriba la ruta y el selector de vista;
+// abajo la leyenda (≈ 44 px) y, con el dock cerrado, el botón «Ver análisis» que asoma sobre el borde.
+const PADDING = { top: 64, right: 16, bottom: 92, left: 16 };
+const LEGEND_BOTTOM = { launcherVisible: 36, launcherHidden: 10 };
 
 // Proyección equirectangular ajustada al área visible. Es lineal en lon/lat,
 // por eso el ráster de las texturas encaja sin reproyectar.
@@ -53,6 +65,7 @@ function CountryMap2D({ countryId }) {
   const trendStatus = useTrendMapStore((state) => state.status);
   const trends = useTrendMapStore((state) => state.trends);
   useTrendMap({ regions, period });
+  const isDockOpen = useDockStore((state) => state.activeTab !== null);
   const scope = trendScope(sensor.map2d);
   const hasTrends = trendStatus === "ready";
 
@@ -121,7 +134,7 @@ function CountryMap2D({ countryId }) {
             onHover={setHoveredRegion}
           />
           <SelectionLabels projection={projection} width={width} selectedRegions={selectedRegions} />
-          <TrendLegendPanel scope={scope} />
+          <TrendLegendPanel style={legendStyle(projection, regions.viewBbox, !isDockOpen)} />
         </>
       )}
 

@@ -6,6 +6,7 @@ import { useTelemetryStore } from "@/stores/useTelemetryStore";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
 import { useCountryRegions } from "@/features/map2d/hooks/useCountryRegions";
 import { resolvePresetZones } from "@/features/explorer/utils/resolvePresetZones";
+import TrendRanking from "@/features/map2d/components/TrendRanking";
 
 const KIND_TEXT = {
   land: "departamentos",
@@ -60,6 +61,9 @@ function CountryPanel() {
           })}
         </section>
       )}
+
+      {/* Otra forma de ver el mapa: lista ordenada por tendencia real, seleccionable */}
+      <TrendRanking />
     </div>
   );
 }

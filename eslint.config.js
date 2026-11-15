@@ -20,7 +20,7 @@ export default defineConfig([
   },
   {
     // Servidor del asistente IA: corre en Node (usa process, etc.)
-    files: ['server/**/*.js'],
+    files: ['server/**/*.js', 'api/**/*.js'],
     languageOptions: { globals: globals.node },
   },
 ])

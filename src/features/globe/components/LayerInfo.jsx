@@ -4,7 +4,8 @@ import { getVariable } from "@/constants/variables";
 // Contenido de la capa activa: leyenda(s), fuente y limitaciones.
 // Lo comparten LayerStatusPanel (2D) y SensorConsole (3D).
 // `layer`: resultado de utils/describeLayer.js
-function LayerInfo({ layer }) {
+// `showSource`: false oculta las líneas de fuente y nota (consola del globo)
+function LayerInfo({ layer, showSource = true }) {
   const variables = layer.variableIds.map(getVariable).filter(Boolean);
 
   return (
@@ -18,8 +19,8 @@ function LayerInfo({ layer }) {
           unit={variable.unit}
         />
       ))}
-      <p className="text-[11px] text-ink-muted">Fuente: {layer.source}</p>
-      <p className="text-[11px] text-ink-muted">{layer.note}</p>
+      {showSource && <p className="text-[11px] text-ink-muted">Fuente: {layer.source}</p>}
+      {showSource && <p className="text-[11px] text-ink-muted">{layer.note}</p>}
     </div>
   );
 }

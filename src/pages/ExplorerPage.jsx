@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import SideDock from "@/features/dock/components/SideDock";
-import DockToggle from "@/features/dock/components/DockToggle";
+import AnalysisLauncher from "@/features/dock/components/AnalysisLauncher";
 import { useDockSync } from "@/features/dock/hooks/useDockSync";
 import GlobeCanvas from "@/features/globe/components/GlobeCanvas";
 import DomainSwitcher from "@/features/globe/components/DomainSwitcher";
@@ -25,7 +25,8 @@ const FADE = { duration: 0.6, ease: [0.22, 1, 0.36, 1] };
 //   3. "← Mundo" o Escape: fundido inverso y la cámara se aleja.
 // HUD: en el globo, una sola consola (emblema + selector + capa); en el 2D,
 // selector arriba y capa abajo. La sonda que sigue al cursor es común a ambos.
-// Dock lateral (hamburguesa arriba a la derecha): Zona · Tendencias · Asistente, uno a la vez.
+// Dock (botón «Ver análisis» en el 2D; robot en el globo): Zona · Tendencias · Asistente, uno a la vez.
+// En móvil/tablet aparece debajo del mapa; en escritorio, como columna derecha.
 function ExplorerPage() {
   const level = useExplorerStore((state) => state.level);
   const countryId = useExplorerStore((state) => state.countryId);
@@ -44,9 +45,10 @@ function ExplorerPage() {
 
   return (
     <div className="absolute inset-0 flex flex-col">
-      <div className="relative flex min-h-0 flex-1">
+      {/* Móvil/tablet: mapa arriba y dock debajo. Escritorio: mapa y dock en columnas */}
+      <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* @container: el HUD se acomoda al ancho real del mapa (cambia cuando el dock está abierto) */}
-        <section className="@container relative min-w-0 flex-1 overflow-hidden" aria-label={isGlobe ? "Globo terráqueo interactivo" : `Mapa de ${country?.name}`}>
+        <section className="@container relative min-h-0 min-w-0 flex-1 overflow-hidden" aria-label={isGlobe ? "Globo terráqueo interactivo" : `Mapa de ${country?.name}`}>
           {/* Nivel 1: globo (sigue montado pero deja de renderizar al ocultarse) */}
           <motion.div
             className="absolute inset-0"
@@ -89,18 +91,18 @@ function ExplorerPage() {
             )}
           </AnimatePresence>
 
-          {/* HUD del mapa 2D: selector arriba y capa abajo a la izquierda */}
+          {/* HUD del mapa 2D: ruta a la izquierda y selector de vista en la esquina superior derecha */}
           <AnimatePresence>
             {!isGlobe && (
               <motion.div
                 key="map-switcher"
-                className="absolute left-1/2 top-[4.25rem] z-20 -translate-x-1/2 @4xl:top-5"
+                className="absolute right-3 top-3 z-20 sm:right-4 sm:top-4"
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -12 }}
                 transition={FADE}
               >
-                <DomainSwitcher domain={domain} onChange={setDomain} />
+                <DomainSwitcher domain={domain} onChange={setDomain} variant="corner" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -108,7 +110,7 @@ function ExplorerPage() {
           <AnimatePresence>
             {!isGlobe && country && (
               <motion.div
-                className="absolute left-4 top-4 z-20 max-w-[calc(100%-5rem)] sm:top-5"
+                className="absolute left-3 top-3 z-20 max-w-[calc(100%-10rem)] sm:left-4 sm:top-4 @3xl:max-w-[calc(100%-26rem)]"
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
@@ -122,7 +124,7 @@ function ExplorerPage() {
             {notice && (
               <motion.p
                 role="status"
-                className="absolute left-1/2 top-32 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-full border text-center @4xl:top-20 border-hud-border bg-space-900/90 px-4 py-1.5 text-xs text-ink-secondary"
+                className="absolute left-1/2 top-16 z-20 w-max max-w-[calc(100%-2rem)] -translate-x-1/2 rounded-full border text-center border-hud-border bg-space-900/90 px-4 py-1.5 text-xs text-ink-secondary"
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }}
@@ -133,9 +135,6 @@ function ExplorerPage() {
           </AnimatePresence>
 
           {/* En el mapa 2D la leyenda la pone CountryMap2D (tendencia térmica real) */}
-
-          {/* Hamburguesa: abre/cierra el dock lateral (común a globo y mapa 2D) */}
-          <DockToggle level={level} className="absolute right-4 top-4 z-20 sm:top-5" />
         </section>
 
         {/* Sonda que sigue al cursor (globo y mapa 2D); posición fija en la ventana */}
@@ -147,7 +146,9 @@ function ExplorerPage() {
       {/* La barra de pasos solo existe en el mapa 2D */}
       <AnimatePresence>
         {!isGlobe && (
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} transition={FADE}>
+          <motion.div className="relative" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} transition={FADE}>
+            {/* «Ver análisis»: sobre el borde entre el mapa y la barra de pasos (zona del pulgar) */}
+            <AnalysisLauncher className="absolute -top-7 right-3 z-30 sm:right-4" />
             <FlowTimeline />
           </motion.div>
         )}

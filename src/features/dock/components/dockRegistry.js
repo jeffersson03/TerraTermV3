@@ -3,12 +3,13 @@ import FlowPanel from "@/features/explorer/components/FlowPanel";
 import AnalysisPanel from "@/features/analysis/components/AnalysisPanel";
 import AssistantChat from "@/features/assistant/components/AssistantChat";
 
-// Registro de pestañas del dock lateral. Módulo nuevo = crear su componente y añadirlo aquí.
+// Registro de pestañas del dock. Módulo nuevo = crear su componente y añadirlo aquí.
 //   levels:     en qué nivel del explorador está disponible ('globe' | 'country')
 //   scrollable: true → el dock hace scroll; false → el contenido gestiona su propio alto (chat)
+// En el globo solo existe el asistente (se abre con el robot); en el mapa 2D, las tres pestañas.
 export const DOCK_TABS = Object.freeze([
   { id: "zone", label: "Zona", icon: MapPinned, levels: ["country"], scrollable: true },
-  { id: "trends", label: "Tendencias", icon: ChartLine, levels: ["globe", "country"], scrollable: true },
+  { id: "trends", label: "Tendencias", icon: ChartLine, levels: ["country"], scrollable: true },
   { id: "assistant", label: "Asistente", icon: Bot, levels: ["globe", "country"], scrollable: false },
 ]);
 
@@ -23,7 +24,6 @@ export function getDockTabs(level) {
   return DOCK_TABS.filter((tab) => tab.levels.includes(level));
 }
 
-// Pestaña que abre la hamburguesa: el panel de zona en el país, el análisis en el globo.
-export function getDefaultDockTab(level) {
-  return level === "country" ? "zone" : "trends";
+export function isTabAvailable(tabId, level) {
+  return DOCK_TABS.some((tab) => tab.id === tabId && tab.levels.includes(level));
 }

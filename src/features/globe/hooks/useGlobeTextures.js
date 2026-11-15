@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import * as THREE from "three";
 
 import { TEXTURE_PATHS } from "@/constants/textures";
+import { useBootStore } from "@/stores/useBootStore";
 
 function createFallbackTexture(r, g, b, isSRGB = false) {
   const data = new Uint8Array([r, g, b, 255]);
@@ -58,6 +59,7 @@ export function useGlobeTextures() {
       loadSingle("terra", TEXTURE_PATHS.terra, false),
       loadSingle("aqua", TEXTURE_PATHS.aqua, false),
     ]).then((entries) => {
+      useBootStore.getState().setGlobeReady(); // avisa a la intro de que ya puede salir
       if (isMounted) setTextures(Object.fromEntries(entries));
       else disposeLoaded(); // terminaron de cargar después de desmontar
     });

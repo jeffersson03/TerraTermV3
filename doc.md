@@ -36,7 +36,7 @@ index.html
                      └─ GlobeCanvas      (escena 3D)
                          └─ EarthGlobe   (planeta)
                              └─ GlobeGraticule (retícula lat/lon)
-                     └─ DockToggle + SideDock (hamburguesa → panel lateral, un módulo a la vez)
+                     └─ SideDock (2D: botón «Ver análisis»; globo: robot) — un módulo a la vez
                          ├─ Zona        → FlowPanel (solo en el mapa 2D)
                          ├─ Tendencias  → AnalysisPanel → TrendExplorer (lazy: NASA POWER / IMERG)
                          └─ Asistente   → AssistantChat
@@ -200,7 +200,8 @@ Todo módulo nuevo se apoya en estos archivos. Cambios aquí se avisan al equipo
 | `features/map2d/utils/trendGrid.js` | Asigna los puntos de la rejilla a cada zona (dentro del polígono / recuadro; si ninguno, el más cercano ≤ 1°), promedia su serie anual y calcula la tendencia con `trendStats.js` (mismo motor que los paneles). |
 | `features/map2d/hooks/useTrendMap.js` + `useTrendMapStore.js` | Descarga y cálculo por país + periodo de filtros; estado compartido con la leyenda y la sonda. |
 | `features/map2d/components/TrendChoroplethLayer.jsx` | Capa SVG de color (debajo de `RegionLayer`, que sigue gestionando selección y hover). |
-| `features/map2d/components/TrendLegendPanel.jsx` | Leyenda, progreso de descarga, reintento, periodo y fuente. Reemplaza a `LayerStatusPanel` en el 2D. |
+| `features/map2d/components/TrendLegendPanel.jsx` | Leyenda compacta de una línea con el **mismo ancho que el mapa dibujado** (bbox proyectado); progreso, reintento y botón «i» con significancia, periodo y fuente. Reemplaza a `LayerStatusPanel` en el 2D. |
+| `features/map2d/components/TrendRanking.jsx` | Ranking térmico interactivo (pestaña Zona, pasos País y Celda): zonas ordenadas por °C/década con barra divergente; tocar una fila la selecciona en el mapa. |
 | `features/map2d/utils/trendColor.js` | Color y opacidad por pendiente/significancia. |
 
 La sonda (`HoverProbe`) muestra en el 2D la tendencia real de la zona bajo el cursor (`useHoverStore.regionId`).
@@ -259,19 +260,32 @@ Al cambiar de vista se descartan las zonas que la nueva vista no permite. Zona A
 | `utils/resolvePresetZones.js` | Convierte las comparaciones de ejemplo (`PRESET_COMPARISONS`) en regiones del mapa. |
 | `components/FlowTimeline.jsx`, `components/FlowPanel.jsx` | Barra de pasos (solo en 2D) y contenido del panel con transiciones (se muestra en la pestaña «Zona» del dock). |
 
+### Intro de carga — `src/features/intro/` + `src/stores/useBootStore.js`
+
+Pantalla completa al abrir la app (una vez por pestaña). La app se monta **debajo** desde el inicio, así el globo y sus texturas cargan mientras se ve la intro.
+
+| Archivo | Responsabilidad |
+|---|---|
+| `constants/introConfig.js` | Rutas del video (`public/intro/terraterm-intro.mp4`, vertical y póster opcionales), tiempos (logo 2,8 s, tope 10 s, «Saltar» a 0,8 s), `oncePerSession`. |
+| `hooks/useIntroGate.js` | Sale cuando **(video/logo terminado y globo listo)**, al pulsar «Saltar» o al llegar al tope. |
+| `components/IntroSplash.jsx` | Capa `z-[100]`; «Preparando el globo…» si el video acaba antes que la carga; salida tipo **portal** (máscara radial que se abre desde el centro + anillo de luz + zoom/desenfoque). Con movimiento reducido: fundido. |
+| `components/IntroVideo.jsx` | Video sin audio y en línea (autoplay). Si no existe, falla o no empieza en 2,5 s → logo. |
+| `components/IntroLogo.jsx` + `styles/introLogo.css` | Logo animado de respaldo (planeta, órbita, letras). |
+| `stores/useBootStore.js` | `isGlobeReady`: lo marca `useGlobeTextures` al terminar de cargar las texturas. |
+
 ### Dock lateral — `src/features/dock/` + `src/stores/useDockStore.js`
 
-Un solo panel a la derecha con pestañas **Zona · Tendencias · Asistente**: muestra un módulo a la vez para que el chat y la información no se superpongan. Se abre con la hamburguesa (arriba a la derecha del mapa) o con el robot (abre «Asistente»).
+Un solo panel con pestañas **abajo** (zona del pulgar) **Zona · Tendencias · Asistente**: un módulo a la vez para que el chat y la información no se superpongan. En escritorio es una columna derecha; en móvil/tablet aparece **debajo del mapa** (el mapa se encoge, no queda tapado). Se abre con el botón flotante «Ver análisis» del 2D y **automáticamente al seleccionar la segunda zona** (comparación). En el globo solo existe la pestaña Asistente, que abre el robot flotante (el robot solo aparece en el globo).
 
 | Archivo | Responsabilidad |
 |---|---|
 | `stores/useDockStore.js` | `activeTab` (`null` = cerrado), `openTab(tab)`, `close()`. |
 | `components/dockRegistry.js` | `DOCK_TABS` (id, etiqueta, icono, niveles, scroll) y `DOCK_PANELS` (id → componente). Módulo nuevo = añadirlo aquí. |
 | `components/SideDock.jsx` | Contenedor responsive: columna que empuja el mapa (≥ lg), panel superpuesto a la derecha (sm–lg), hoja inferior (móvil). |
-| `components/DockToggle.jsx` | Botón hamburguesa (abre «Zona» en el país y «Tendencias» en el globo). |
+| `components/AnalysisLauncher.jsx` | Botón «Ver análisis» (solo 2D, dock cerrado): sobre el borde mapa/barra de pasos, con halo pulsante e insignia de zonas seleccionadas. |
 | `hooks/useDockSync.js` | Abre «Zona» al entrar a un país en escritorio y la cierra al volver al globo. |
 
-Responsive del HUD: la sección del mapa es un `@container`; el selector Global/Terra/Aqua baja bajo la ruta «← Mundo / País» cuando el mapa mide menos de 56rem (p. ej. con el dock abierto o en móvil). Las etiquetas «Prototipo visual» se ocultan en `StatusBadge` (la fuente y la nota de cada capa siguen visibles).
+Responsive del HUD: la sección del mapa es un `@container`. En el 2D, la ruta «← Mundo / País» va arriba a la izquierda y el selector Global/Terra/Aqua (`DomainSwitcher variant="corner"`) arriba a la derecha, con botones táctiles de 44 px: solo iconos si el mapa mide menos de 48rem, con etiqueta si hay espacio. Las etiquetas «Prototipo visual» se ocultan en `StatusBadge`; la consola del globo muestra solo la escala de color (sin insignia, fuente ni nota de la textura).
 | `components/panelRegistry.js` | `PANELS` + `resolvePanelId` (Comparar/Periodo tierra + mar → `correlation`). |
 | `components/panels/*` | `CountryPanel`, `CellPanel`, `ComparePanel`, `PeriodPanel`, `CityPanel`, `CorrelationPanel`, bloque `RegionComparison`. Toleran selecciones vacías durante la animación de salida. |
 
@@ -329,7 +343,7 @@ Robot flotante con chat en streaming. Montado en `ExplorerLayout` (`AssistantPro
 |---|---|
 | `index.js` | API pública: `AssistantProvider`, `AssistantFab`, `RobotMascot`. |
 | `AssistantProvider.jsx` | `AssistantRuntimeProvider` + `useLocalRuntime(chatAdapter)` (`@assistant-ui/react`). |
-| `components/AssistantFab.jsx` | Robot fijo: abre la pestaña «Asistente» del dock. Se oculta con el dock abierto y en móvil (ahí se usa la hamburguesa). Prop `position` (en el mapa 2D sube a `bottom-28` para no tapar `FlowTimeline`). |
+| `components/AssistantFab.jsx` | Robot fijo, **solo en el globo 3D**: abre la pestaña «Asistente» del dock. Se oculta con el dock abierto. En móvil va arriba a la derecha y al 75 %. En el 2D el asistente es la pestaña junto a Tendencias. |
 | `components/AssistantChat.jsx` | Cabecera (mascota + estado) + `Thread`; contenido de la pestaña «Asistente». |
 | `components/Thread.jsx` | Mensajes, sugerencias y caja de texto. |
 | `components/MarkdownText.jsx` | Markdown GFM con estilos del asistente. |

@@ -3,12 +3,11 @@ import { useTelemetryStore } from "@/stores/useTelemetryStore";
 import { useDockStore } from "@/stores/useDockStore";
 import { AssistantFab, AssistantProvider } from "@/features/assistant";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
+import IntroSplash from "@/features/intro/components/IntroSplash";
 
-// Posición del robot: en el mapa 2D sube para no tapar la barra de pasos (FlowTimeline).
-const ASSISTANT_POSITION = {
-  globe: "right-6 bottom-6",
-  country: "right-6 bottom-28",
-};
+// Robot flotante: solo en el globo 3D (en el 2D el asistente es una pestaña junto a Tendencias).
+// En móvil va arriba a la derecha para no tapar la consola del sensor; en pantallas grandes, abajo.
+const ASSISTANT_POSITION = "right-3 top-14 sm:top-auto sm:bottom-6 sm:right-6";
 
 // Marco del explorador: barra superior fija con el logo + área de trabajo.
 // La barra es fija (no se despliega al pasar el mouse) para no tapar el dock ni el HUD
@@ -38,10 +37,13 @@ function ExplorerLayout() {
 
         {/* Robot del asistente (fixed): abre el chat en el dock; se oculta con el dock abierto */}
         <AssistantFab
-          position={ASSISTANT_POSITION[level] ?? ASSISTANT_POSITION.globe}
-          hidden={isDockOpen}
+          position={ASSISTANT_POSITION}
+          hidden={isDockOpen || level !== "globe"}
           onOpen={() => openDockTab("assistant")}
         />
+
+        {/* Intro de carga (video o logo animado) encima de todo; la app carga debajo */}
+        <IntroSplash />
       </div>
     </AssistantProvider>
   );

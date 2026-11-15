@@ -3,6 +3,7 @@ import HudButton from "@/components/Hud/HudButton";
 import SourceBadge from "@/components/Hud/SourceBadge";
 import DataState from "@/components/Hud/DataState";
 import TrendTile from "@/features/analysis/components/TrendTile";
+import TrendRanking from "@/features/map2d/components/TrendRanking";
 import VariableChips from "@/features/filters/components/VariableChips";
 import { useRegionTrend } from "@/features/analysis/hooks/useRegionTrend";
 import { useSelectionContext } from "@/features/explorer/hooks/useSelectionContext";
@@ -43,7 +44,8 @@ function CellPanel() {
         <SourceBadge meta={query.meta} className="mt-3" />
       </DataState>
 
-      {regions.length < 2 && <p className="text-xs text-ink-muted">Selecciona otra zona en el mapa para compararlas.</p>}
+      {regions.length < 2 && <p className="text-xs text-ink-muted">Selecciona otra zona en el mapa o en el ranking para compararlas.</p>}
+      {regions.length < 2 && <TrendRanking />}
 
       {region.kind === "land" && (
         <HudButton variant="ghost" icon={Layers} onClick={() => goToStep("city")} className="self-start">

@@ -10,6 +10,12 @@ dist-ssr
 .env
 .env.*
 !.env.example
+README.md
+doc.md
+plan-integration.md 
+plan-asistenteia.md
+# Vercel CLI (configuración local del proyecto enlazado)
+.vercel
 
 # Logs
 logs

@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
 import HudPanel from "@/components/Hud/HudPanel";
-import StatusBadge from "@/components/Hud/StatusBadge";
 import DomainEmblem from "@/features/globe/components/DomainEmblem";
 import DomainSwitcher from "@/features/globe/components/DomainSwitcher";
 import LayerInfo from "@/features/globe/components/LayerInfo";
@@ -39,7 +38,6 @@ function SensorConsole({ domain, onChange }) {
               </motion.div>
             </AnimatePresence>
           </div>
-          <StatusBadge kind={layer.kind} />
         </div>
 
         <div className="my-3 border-y border-hud-border py-2">
@@ -48,7 +46,8 @@ function SensorConsole({ domain, onChange }) {
 
         <AnimatePresence mode="wait" initial={false}>
           <motion.div key={domain} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={SWAP}>
-            <LayerInfo layer={layer} />
+            {/* Solo la escala de color: sin fuente ni nota de la textura (limpieza visual del globo) */}
+            <LayerInfo layer={layer} showSource={false} />
           </motion.div>
         </AnimatePresence>
       </HudPanel>

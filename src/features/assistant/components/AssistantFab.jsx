@@ -2,20 +2,20 @@ import { useRobotMood } from "../hooks/useRobotMood";
 import RobotMascot from "./RobotMascot";
 
 /**
- * Robot flotante: acceso rápido al asistente. Al pulsarlo abre el chat en el dock lateral
- * (pestaña «Asistente»), así el chat nunca se superpone con el panel de información.
+ * Robot flotante (solo en el globo 3D): al pulsarlo abre el chat en el dock
+ * (pestaña «Asistente»). En el mapa 2D el asistente es una pestaña junto a Tendencias.
  *
  * position: clases de Tailwind para ubicar el robot (cámbialo si choca con otra barra).
  * hidden:   oculta el robot (p. ej. cuando el dock ya está abierto).
  * onOpen:   abre el chat.
- * En pantallas pequeñas no se muestra: el asistente se abre desde el menú (hamburguesa).
+ * En móvil se dibuja más pequeño (escala) para no tapar el globo.
  */
 function AssistantFab({ position = "right-6 bottom-6", hidden = false, onOpen }) {
   const mood = useRobotMood();
   if (hidden) return null;
 
   return (
-    <div className={`fixed z-40 hidden sm:block ${position}`}>
+    <div className={`fixed z-40 origin-top-right scale-75 sm:origin-bottom-right sm:scale-100 ${position}`}>
       <button
         type="button"
         onClick={onOpen}

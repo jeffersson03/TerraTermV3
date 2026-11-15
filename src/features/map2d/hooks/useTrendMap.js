@@ -44,7 +44,7 @@ export function useTrendMap({ regions, period }) {
       .then((points) => {
         if (!isCurrent()) return;
         const allRegions = [...regions.landRegions, ...regions.oceanRegions];
-        useTrendMapStore.getState().finish(computeRegionTrends(allRegions, points, from, to));
+        useTrendMapStore.getState().finish(computeRegionTrends(allRegions, points, from, to), allRegions);
       })
       .catch((error) => {
         if (isCurrent()) useTrendMapStore.getState().fail(error);

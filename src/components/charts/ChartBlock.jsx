@@ -2,6 +2,7 @@ import HudPanel from "@/components/Hud/HudPanel";
 import DataState from "@/components/Hud/DataState";
 import SourceBadge from "@/components/Hud/SourceBadge";
 import { CHART_TYPES } from "@/components/charts/chartRegistry";
+import { useT } from "@/i18n/useT";
 
 /**
  * Bloque de gráfico estándar: panel + estados de datos + gráfico + procedencia.
@@ -14,11 +15,13 @@ import { CHART_TYPES } from "@/components/charts/chartRegistry";
  */
 function ChartBlock({ title, type, state, meta, chartProps, actions }) {
   const Chart = CHART_TYPES[type] ?? null;
+  const { t, lang } = useT();
 
   return (
     <HudPanel title={title} actions={actions}>
       <DataState {...state}>
-        {Chart ? <Chart {...chartProps} /> : <p className="text-xs text-ink-muted">Tipo de gráfico no registrado: {type}</p>}
+        {/* `lang` en los props: el gráfico vuelve a formatear ejes y tooltip al cambiar de idioma */}
+        {Chart ? <Chart {...chartProps} lang={lang} /> : <p className="text-xs text-ink-muted">{t("chart.unknown", { type })}</p>}
         <SourceBadge meta={meta} className="mt-2" />
       </DataState>
     </HudPanel>

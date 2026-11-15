@@ -16,6 +16,7 @@ import { useSelectionPruning } from "@/features/explorer/hooks/useSelectionPruni
 import { useFlowKeyboard } from "@/features/explorer/hooks/useFlowKeyboard";
 import { useTelemetryStore } from "@/stores/useTelemetryStore";
 import { getCountry } from "@/constants/countries";
+import { useT } from "@/i18n/useT";
 
 const FADE = { duration: 0.6, ease: [0.22, 1, 0.36, 1] };
 
@@ -42,13 +43,15 @@ function ExplorerPage() {
 
   const isGlobe = level === "globe";
   const country = getCountry(countryId);
+  const { t, tc } = useT();
+  const countryName = country ? tc("countries", country.id, "name", country.name) : "";
 
   return (
     <div className="absolute inset-0 flex flex-col">
       {/* Móvil/tablet: mapa arriba y dock debajo. Escritorio: mapa y dock en columnas */}
       <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
         {/* @container: el HUD se acomoda al ancho real del mapa (cambia cuando el dock está abierto) */}
-        <section className="@container relative min-h-0 min-w-0 flex-1 overflow-hidden" aria-label={isGlobe ? "Globo terráqueo interactivo" : `Mapa de ${country?.name}`}>
+        <section className="@container relative min-h-0 min-w-0 flex-1 overflow-hidden" aria-label={isGlobe ? t("map.globeLabel") : t("map.countryLabel", { country: countryName })}>
           {/* Nivel 1: globo (sigue montado pero deja de renderizar al ocultarse) */}
           <motion.div
             className="absolute inset-0"
@@ -115,7 +118,7 @@ function ExplorerPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -12 }}
               >
-                <MapBreadcrumb countryName={country.name} selectedRegions={selectedRegions} onBack={handleExit} />
+                <MapBreadcrumb countryName={countryName} selectedRegions={selectedRegions} onBack={handleExit} />
               </motion.div>
             )}
           </AnimatePresence>

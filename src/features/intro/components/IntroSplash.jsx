@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { animate, AnimatePresence, motion, useMotionValue, useTransform } from "framer-motion";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useT } from "@/i18n/useT";
 import { INTRO_CONFIG } from "@/features/intro/constants/introConfig";
 import { useIntroGate } from "@/features/intro/hooks/useIntroGate";
 import IntroVideo from "@/features/intro/components/IntroVideo";
@@ -15,6 +16,7 @@ const PORTAL_END_VMAX = 150; // radio final: cubre las esquinas de cualquier pan
 // en el borde mientras la intro se aleja y se desenfoca. Con movimiento reducido: fundido simple.
 function IntroSplash() {
   const gate = useIntroGate();
+  const { t } = useT();
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const [useLogo, setUseLogo] = useState(reducedMotion);
 
@@ -52,7 +54,7 @@ function IntroSplash() {
     <motion.div
       role="dialog"
       aria-modal="true"
-      aria-label="Cargando TerraTerm"
+      aria-label={t("intro.loading")}
       className="fixed inset-0 z-[100] overflow-hidden"
       style={reducedMotion ? undefined : { maskImage: mask, WebkitMaskImage: mask }}
       animate={reducedMotion && isLeaving ? { opacity: 0 } : { opacity: 1 }}
@@ -85,7 +87,7 @@ function IntroSplash() {
             exit={{ opacity: 0 }}
             className="absolute inset-x-0 bottom-16 mx-auto flex w-56 flex-col items-center gap-2"
           >
-            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink-secondary">Preparando el globo…</span>
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em] text-ink-secondary">{t("intro.preparing")}</span>
             <span className="relative h-0.5 w-full overflow-hidden rounded-full bg-hud-border">
               <motion.span
                 className="absolute inset-y-0 w-1/3 rounded-full bg-sensor-accent"
@@ -107,7 +109,7 @@ function IntroSplash() {
             exit={{ opacity: 0 }}
             className="absolute bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 min-h-11 rounded-full border border-hud-border bg-space-900/70 px-4 font-mono text-xs uppercase tracking-wider text-ink-secondary backdrop-blur-md transition-colors hover:border-sensor-accent hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-sensor-accent sm:right-6"
           >
-            Saltar
+            {t("intro.skip")}
           </motion.button>
         )}
       </AnimatePresence>

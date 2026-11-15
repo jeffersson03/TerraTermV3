@@ -6,9 +6,11 @@ import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
 import { useTrendMapStore } from "@/features/map2d/hooks/useTrendMapStore";
 import { trendColor, trendOpacity } from "@/features/map2d/utils/trendColor";
 import { formatSigned } from "@/utils/formatValues";
+import { useT } from "@/i18n/useT";
+import { regionDisplayLabel } from "@/features/map2d/utils/regionModel";
 
 const COLLAPSED_ROWS = 8;
-const KIND_TITLE = { land: "Departamentos", ocean: "Mar" };
+const KIND_TITLE_KEY = { land: "ranking.land", ocean: "ranking.ocean" };
 
 // Barra divergente centrada en 0: hacia la derecha calienta, hacia la izquierda enfría.
 function TrendBar({ trend }) {
@@ -43,6 +45,7 @@ function TrendRanking() {
   const sensor = getSensor(useTelemetryStore((state) => state.domain));
   const [kind, setKind] = useState("land");
   const [expanded, setExpanded] = useState(false);
+  const { t, locale } = useT();
 
   // La vista decide qué se puede seleccionar: Terra solo tierra, Aqua solo mar.
   const kinds = sensor.selectableKinds;
@@ -57,20 +60,20 @@ function TrendRanking() {
     [regions, trends, activeKind]
   );
 
-  if (status === "loading") return <p className="animate-pulse text-xs text-ink-muted">Calculando el ranking térmico…</p>;
+  if (status === "loading") return <p className="animate-pulse text-xs text-ink-muted">{t("ranking.loading")}</p>;
   if (status !== "ready" || rows.length === 0) return null;
 
   const selectedById = new Map(selectedRegions.map((region) => [region.id, region]));
   const visible = expanded ? rows : rows.slice(0, COLLAPSED_ROWS);
 
   return (
-    <section aria-label="Ranking térmico" className="flex flex-col gap-2">
+    <section aria-label={t("ranking.title")} className="flex flex-col gap-2">
       <header className="flex items-center justify-between gap-2">
         <h3 className="text-[11px] uppercase tracking-wider text-ink-secondary">
-          Ranking térmico{period ? ` ${period.from}–${period.to}` : ""}
+          {t("ranking.title")}{period ? ` ${period.from}–${period.to}` : ""}
         </h3>
         {kinds.length > 1 && (
-          <div role="group" aria-label="Tipo de zona" className="flex rounded-md border border-hud-border p-0.5">
+          <div role="group" aria-label={t("ranking.kind")} className="flex rounded-md border border-hud-border p-0.5">
             {kinds.map((option) => (
               <button
                 key={option}
@@ -79,13 +82,13 @@ function TrendRanking() {
                 onClick={() => setKind(option)}
                 className={`rounded px-2 py-1 text-[11px] ${option === activeKind ? "bg-space-800 text-sensor-accent" : "text-ink-muted hover:text-ink"}`}
               >
-                {KIND_TITLE[option]}
+                {t(KIND_TITLE_KEY[option])}
               </button>
             ))}
           </div>
         )}
       </header>
-      <p className="text-[11px] text-ink-muted">Toca una zona para seleccionarla y compararla.</p>
+      <p className="text-[11px] text-ink-muted">{t("ranking.hint")}</p>
 
       <ol className="flex flex-col">
         {visible.map(({ region, trend }) => {
@@ -103,11 +106,11 @@ function TrendRanking() {
               >
                 <span className="truncate text-xs text-ink">
                   {selected && <span className="mr-1 font-mono text-sensor-accent">{selected.marker}</span>}
-                  {region.label}
+                  {regionDisplayLabel(region, t)}
                 </span>
                 <TrendBar trend={trend} />
                 <span className={`text-right font-mono text-xs tabular-nums ${trend.isSignificant ? "text-ink" : "text-ink-muted"}`}>
-                  {formatSigned(trend.slopePerDecade)}
+                  {formatSigned(trend.slopePerDecade, 2, locale)}
                   {trend.isSignificant && <span className="text-sensor-accent">*</span>}
                 </span>
               </button>
@@ -117,10 +120,10 @@ function TrendRanking() {
       </ol>
 
       <div className="flex items-center justify-between gap-2 text-[10px] text-ink-muted">
-        <span>°C por década · * significativa (p &lt; 0,05)</span>
+        <span>{t("ranking.footer")}</span>
         {rows.length > COLLAPSED_ROWS && (
           <button type="button" onClick={() => setExpanded((value) => !value)} className="min-h-9 px-2 text-xs text-sensor-accent hover:underline">
-            {expanded ? "Ver menos" : `Ver las ${rows.length}`}
+            {expanded ? t("ranking.showLess") : t("ranking.showAll", { count: rows.length })}
           </button>
         )}
       </div>

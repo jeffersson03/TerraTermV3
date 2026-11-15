@@ -260,6 +260,22 @@ Al cambiar de vista se descartan las zonas que la nueva vista no permite. Zona A
 | `utils/resolvePresetZones.js` | Convierte las comparaciones de ejemplo (`PRESET_COMPARISONS`) en regiones del mapa. |
 | `components/FlowTimeline.jsx`, `components/FlowPanel.jsx` | Barra de pasos (solo en 2D) y contenido del panel con transiciones (se muestra en la pestaña «Zona» del dock). |
 
+### Idiomas (ES / EN) — `src/i18n/`
+
+Selector **ES · EN** en la barra superior (`components/Hud/LanguageSwitch.jsx`). El idioma inicial es el guardado (`localStorage`) o el del navegador; se actualiza `<html lang>`. Sin dependencias nuevas (zustand).
+
+| Archivo | Responsabilidad |
+|---|---|
+| `languageStore.js` | `LANGUAGES` (es → locale `"es"`, coma decimal; en → `"en-US"`), `useLanguageStore`, `getLang()`, `getLocale()`. Sin navegador (tests) usa español. |
+| `useT.js` | `useT()` → `{ t, tc, lang, locale }`. `t("clave", { var })` traduce textos; `tc(grupo, id, campo, respaldo)` traduce catálogos de `constants/` (siguen en español y su inglés vive en `en.catalog`). `t` fuera de React para servicios/hooks. |
+| `locales/es.js`, `locales/en.js` | Diccionarios con las mismas claves (213). Si falta una clave en inglés se muestra la española. |
+
+Reglas:
+- Texto visible nuevo → clave en **ambos** diccionarios, nunca literal en el JSX.
+- Números, fechas y coordenadas: pasar siempre el `locale` de `useT()` como último argumento (`formatSigned(v, 2, locale)`, `formatPeriod(p, locale)`, `format(v, 2, locale)`…). El React Compiler memoriza las llamadas por sus argumentos: sin `locale`, el número no se reformatea al cambiar de idioma.
+- Zonas: `regionDisplayLabel(region, t)` (las celdas de mar se rearman como «Mar …» / «Sea …»).
+- Asistente: el cliente envía `language`; el servidor añade «Responde en …» al prompt y traduce sus errores y el modo demo.
+
 ### Intro de carga — `src/features/intro/` + `src/stores/useBootStore.js`
 
 Pantalla completa al abrir la app (una vez por pestaña). La app se monta **debajo** desde el inicio, así el globo y sus texturas cargan mientras se ve la intro.

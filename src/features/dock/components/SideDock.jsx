@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChevronDown, X } from "lucide-react";
 import { useDockStore } from "@/stores/useDockStore";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useT } from "@/i18n/useT";
 import { DOCK_PANELS, getDockTabs } from "@/features/dock/components/dockRegistry";
 
 const EASE = [0.22, 1, 0.36, 1];
@@ -18,8 +19,9 @@ const VARIANTS = {
 // Pestañas abajo: zona de fácil alcance con el pulgar en móvil.
 function DockTabs({ tabs, activeTab, onSelect, onClose, isDesktop }) {
   const CloseIcon = isDesktop ? X : ChevronDown;
+  const { t } = useT();
   return (
-    <nav aria-label="Módulos" className="flex shrink-0 items-center gap-1 border-t border-hud-border bg-space-900/80 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+    <nav aria-label={t("dock.modules")}className="flex shrink-0 items-center gap-1 border-t border-hud-border bg-space-900/80 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <div role="tablist" className="flex min-w-0 flex-1 gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -37,7 +39,7 @@ function DockTabs({ tabs, activeTab, onSelect, onClose, isDesktop }) {
               }`}
             >
               <Icon aria-hidden="true" className="size-4 shrink-0" />
-              <span className="truncate">{tab.label}</span>
+              <span className="truncate">{t(tab.labelKey)}</span>
             </button>
           );
         })}
@@ -45,7 +47,7 @@ function DockTabs({ tabs, activeTab, onSelect, onClose, isDesktop }) {
       <button
         type="button"
         onClick={onClose}
-        aria-label="Cerrar panel"
+        aria-label={t("dock.close")}
         className="flex size-11 shrink-0 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-space-800 hover:text-ink focus-visible:outline focus-visible:outline-1 focus-visible:outline-sensor-accent"
       >
         <CloseIcon aria-hidden="true" className="size-5" />
@@ -60,6 +62,7 @@ function SideDock({ level }) {
   const openTab = useDockStore((state) => state.openTab);
   const close = useDockStore((state) => state.close);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const { t } = useT();
 
   const tabs = getDockTabs(level);
   const current = tabs.find((tab) => tab.id === activeTab);
@@ -71,7 +74,7 @@ function SideDock({ level }) {
         <motion.aside
           id="side-dock"
           key={`side-dock-${isDesktop ? "desktop" : "stacked"}`}
-          aria-label="Panel de análisis"
+          aria-label={t("dock.panel")}
           {...(isDesktop ? VARIANTS.desktop : VARIANTS.stacked)}
           transition={{ duration: 0.4, ease: EASE }}
           className="relative z-30 flex w-full shrink-0 flex-col overflow-hidden border-t border-hud-border bg-space-950/95 backdrop-blur-md lg:w-auto lg:border-l lg:border-t-0"

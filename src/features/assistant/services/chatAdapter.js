@@ -2,6 +2,8 @@
 // Separado de los componentes visuales, como pide la guía del proyecto.
 
 import { buildAssistantContext } from "../utils/buildAssistantContext";
+import { getLang } from "@/i18n/languageStore";
+import { t } from "@/i18n/useT";
 
 const API_URL = "/api/chat";
 
@@ -30,14 +32,15 @@ export const chatAdapter = {
     const response = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: toApiMessages(messages), context: safeContext() }),
+      // `language`: el modelo responde en el idioma de la interfaz
+      body: JSON.stringify({ messages: toApiMessages(messages), context: safeContext(), language: getLang() }),
       signal: abortSignal,
     });
 
     if (!response.ok || !response.body) {
       // El servidor manda { error: "mensaje claro" }; si no, asumimos que no está corriendo.
       const data = await response.json().catch(() => null);
-      throw new Error(data?.error ?? "El asistente no está disponible. ¿Está corriendo el servidor?");
+      throw new Error(data?.error ?? t("assistant.unavailable"));
     }
 
     // Leemos la respuesta en streaming y vamos mostrando el texto acumulado.

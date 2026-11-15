@@ -119,7 +119,7 @@ function IntroLogo({ durationMs, reducedMotion = false, onDone }) {
         animate={{ opacity: 1 }}
         transition={transition(1.4)}
       >
-        Datos de la Tierra · NASA
+        Geospatial intelligence
       </motion.p>
     </div>
   );

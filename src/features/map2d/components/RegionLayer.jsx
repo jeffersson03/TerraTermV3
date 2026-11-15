@@ -1,5 +1,7 @@
 import { useMemo } from "react";
 import { geoPath } from "d3-geo";
+import { useT } from "@/i18n/useT";
+import { regionDisplayLabel } from "@/features/map2d/utils/regionModel";
 
 const BASE_SHAPE = "transition-[fill,stroke,opacity] duration-200 outline-none";
 
@@ -20,6 +22,7 @@ function handleKeyToggle(event, onToggle, region) {
 
 // Una zona seleccionable: <path> (departamento) o <rect> (celda de océano)
 function RegionShape({ region, shapeProps, isSelectable, selected, onToggle, onHover }) {
+  const { t } = useT();
   const Tag = region.kind === "land" ? "path" : "rect";
   const stateClass = selected ? STYLES.selected : isSelectable ? STYLES.selectable : STYLES.disabled;
 
@@ -30,7 +33,7 @@ function RegionShape({ region, shapeProps, isSelectable, selected, onToggle, onH
         role={isSelectable ? "button" : undefined}
         tabIndex={isSelectable ? 0 : -1}
         aria-pressed={isSelectable ? Boolean(selected) : undefined}
-        aria-label={isSelectable ? region.label : undefined}
+        aria-label={isSelectable ? regionDisplayLabel(region, t) : undefined}
         className={`${BASE_SHAPE} ${STYLES[region.kind]} ${stateClass}`}
         onClick={isSelectable ? () => onToggle(region) : undefined}
         onKeyDown={isSelectable ? (event) => handleKeyToggle(event, onToggle, region) : undefined}
@@ -47,6 +50,7 @@ function RegionShape({ region, shapeProps, isSelectable, selected, onToggle, onH
 // Qué se puede seleccionar lo decide `selectableKinds` (registro de vistas).
 function RegionLayer({ projection, width, height, landRegions, oceanRegions, contextFeatures, selectableKinds, selectedRegions, onToggle, onHover }) {
   const path = useMemo(() => geoPath(projection), [projection]);
+  const { t } = useT();
   const selectedById = useMemo(() => new Map(selectedRegions.map((region) => [region.id, region])), [selectedRegions]);
 
   const cellRect = ({ bbox: [west, south, east, north] }) => {
@@ -68,7 +72,7 @@ function RegionLayer({ projection, width, height, landRegions, oceanRegions, con
   );
 
   return (
-    <svg width={width} height={height} className="absolute inset-0" aria-label="Zonas seleccionables del mapa">
+    <svg width={width} height={height} className="absolute inset-0" aria-label={t("map.zonesLabel")}>
       <g aria-hidden="true">
         {contextFeatures.map((feature) => (
           <path key={feature.id} d={path(feature)} className="fill-space-950/40 stroke-hud-border [stroke-width:0.5]" />

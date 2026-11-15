@@ -51,6 +51,14 @@ export function cellToOceanRegion([west, south, east, north]) {
   };
 }
 
+// Nombre visible de una zona en el idioma activo. Los departamentos conservan su nombre propio;
+// las celdas de mar se rearman («Mar 5,50° S · 81,00° O» / «Sea 5.50° S · 81.00° W»).
+// `t`: función de traducción de useT (el componente que llama ya está suscrito al idioma).
+export function regionDisplayLabel(region, t) {
+  if (region?.kind !== "ocean") return region?.label ?? "";
+  return `${t("regions.sea")} ${formatLatitude(region.center.lat)} · ${formatLongitude(region.center.lon)}`;
+}
+
 export function isPointInBbox(lat, lon, [west, south, east, north]) {
   return lat >= south && lat <= north && lon >= west && lon <= east;
 }

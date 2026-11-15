@@ -15,6 +15,7 @@ import TrendLegendPanel from "@/features/map2d/components/TrendLegendPanel";
 import { useTrendMap } from "@/features/map2d/hooks/useTrendMap";
 import { useTrendMapStore } from "@/features/map2d/hooks/useTrendMapStore";
 import { useDockStore } from "@/stores/useDockStore";
+import { useT } from "@/i18n/useT";
 
 // Rectángulo del mapa dibujado (bbox proyectado): la leyenda toma exactamente su ancho.
 function legendStyle(projection, viewBbox, isLauncherVisible) {
@@ -66,6 +67,7 @@ function CountryMap2D({ countryId }) {
   const trends = useTrendMapStore((state) => state.trends);
   useTrendMap({ regions, period });
   const isDockOpen = useDockStore((state) => state.activeTab !== null);
+  const { t } = useT();
   const scope = trendScope(sensor.map2d);
   const hasTrends = trendStatus === "ready";
 
@@ -99,7 +101,7 @@ function CountryMap2D({ countryId }) {
     >
       {!projection && (
         <p role="status" className="absolute inset-0 grid place-items-center font-mono text-xs text-ink-muted">
-          {regions.status === "error" ? "No se pudo cargar el país." : "Preparando mapa…"}
+          {regions.status === "error" ? t("map.loadError") : t("map.preparing")}
         </p>
       )}
 
@@ -140,7 +142,7 @@ function CountryMap2D({ countryId }) {
 
       {regions.usedFallback && (
         <p className="absolute right-4 top-16 max-w-xs rounded-sm border border-hud-border bg-space-900/85 px-3 py-1.5 text-[11px] text-ink-secondary">
-          Divisiones administrativas no disponibles: se usa el contorno del país.
+          {t("map.fallbackBorders")}
         </p>
       )}
     </div>

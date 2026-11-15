@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { EXPLORER_STEPS, getStep } from "@/features/explorer/constants/explorerSteps";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
+import { useT } from "@/i18n/useT";
 
 // Barra inferior del mapa 2D: pasos habilitados según la selección y el texto
 // del paso activo. No se muestra en el globo (la monta ExplorerPage solo en 2D).
@@ -11,9 +12,10 @@ function FlowTimeline() {
 
   const activeIndex = EXPLORER_STEPS.findIndex((step) => step.id === stepId);
   const step = getStep(stepId);
+  const { t, tc } = useT();
 
   return (
-    <nav aria-label="Pasos del explorador" className="shrink-0 border-t border-hud-border bg-space-950/95 px-4 pb-3 pt-2 sm:px-6">
+    <nav aria-label={t("steps.label")}className="shrink-0 border-t border-hud-border bg-space-950/95 px-4 pb-3 pt-2 sm:px-6">
       <ol className="flex gap-2 sm:gap-4">
         {EXPLORER_STEPS.map((item, index) => {
           const isActive = item.id === stepId;
@@ -40,7 +42,7 @@ function FlowTimeline() {
                     isActive ? "font-semibold text-ink" : isAvailable ? "text-ink-secondary group-hover:text-ink" : "text-ink-muted opacity-50"
                   }`}
                 >
-                  {item.label}
+                  {tc("steps", item.id, "label", item.label)}
                 </span>
               </button>
             </li>
@@ -58,7 +60,7 @@ function FlowTimeline() {
             transition={{ duration: 0.25 }}
             className="text-sm text-ink-secondary sm:text-base"
           >
-            {step.caption}
+            {tc("steps", step.id, "caption", step.caption)}
           </motion.p>
         </AnimatePresence>
       </div>

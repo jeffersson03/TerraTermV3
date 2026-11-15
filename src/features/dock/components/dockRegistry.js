@@ -8,9 +8,9 @@ import AssistantChat from "@/features/assistant/components/AssistantChat";
 //   scrollable: true → el dock hace scroll; false → el contenido gestiona su propio alto (chat)
 // En el globo solo existe el asistente (se abre con el robot); en el mapa 2D, las tres pestañas.
 export const DOCK_TABS = Object.freeze([
-  { id: "zone", label: "Zona", icon: MapPinned, levels: ["country"], scrollable: true },
-  { id: "trends", label: "Tendencias", icon: ChartLine, levels: ["country"], scrollable: true },
-  { id: "assistant", label: "Asistente", icon: Bot, levels: ["globe", "country"], scrollable: false },
+  { id: "zone", labelKey: "dock.zone", icon: MapPinned, levels: ["country"], scrollable: true },
+  { id: "trends", labelKey: "dock.trends", icon: ChartLine, levels: ["country"], scrollable: true },
+  { id: "assistant", labelKey: "dock.assistant", icon: Bot, levels: ["globe", "country"], scrollable: false },
 ]);
 
 // Componente de cada pestaña (acceso directo por id: componentes estáticos para React).

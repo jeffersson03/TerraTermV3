@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { SENSOR_ORDER, getSensor } from "@/constants/sensors";
+import { useT } from "@/i18n/useT";
 
 // Cada botón lleva su propio `data-sensor`, así las clases `*-sensor-accent`
 // toman el color de SU vista. No hace falta una clase distinta por dominio.
@@ -24,13 +25,15 @@ const BUTTON_CLASSES = {
 // `pillId`: id de la animación de la píldora; distinto si hay dos selectores a la vez
 function DomainSwitcher({ domain, onChange, variant = "floating", pillId = "domain-pill" }) {
   const isCorner = variant === "corner";
+  const { t, tc } = useT();
 
   return (
-    <div role="group" aria-label="Vista del globo (atajo: Espacio)" className={CONTAINER_CLASSES[variant]}>
+    <div role="group" aria-label={t("sensors.switcher")} className={CONTAINER_CLASSES[variant]}>
       {SENSOR_ORDER.map((key) => {
         const item = getSensor(key);
         const Icon = item.icon;
         const isActive = domain === key;
+        const description = tc("sensors", key, "description", item.description);
 
         return (
           <button
@@ -38,8 +41,8 @@ function DomainSwitcher({ domain, onChange, variant = "floating", pillId = "doma
             type="button"
             data-sensor={key}
             aria-pressed={isActive}
-            aria-label={isCorner ? `${item.label}: ${item.description}` : undefined}
-            title={item.description}
+            aria-label={isCorner ? `${item.label}: ${description}` : undefined}
+            title={description}
             onClick={() => onChange(key)}
             className={`
               group relative py-2 rounded-md ${BUTTON_CLASSES[variant] ?? BUTTON_CLASSES.floating}

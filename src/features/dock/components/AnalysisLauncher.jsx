@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ChartLine } from "lucide-react";
 import { useDockStore } from "@/stores/useDockStore";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
+import { useT } from "@/i18n/useT";
 
 // Botón flotante «Ver análisis» del mapa 2D (reemplaza a la hamburguesa).
 // Abajo a la derecha, zona cómoda para el pulgar; un halo pulsante lo hace visible y
@@ -10,6 +11,7 @@ function AnalysisLauncher({ className = "" }) {
   const isDockOpen = useDockStore((state) => state.activeTab !== null);
   const openTab = useDockStore((state) => state.openTab);
   const selectionCount = useExplorerStore((state) => state.selectedRegions.length);
+  const { t } = useT();
 
   return (
     <AnimatePresence>
@@ -18,7 +20,7 @@ function AnalysisLauncher({ className = "" }) {
           key="analysis-launcher"
           type="button"
           onClick={() => openTab("zone")}
-          aria-label={`Ver análisis${selectionCount ? ` de ${selectionCount} zona${selectionCount > 1 ? "s" : ""}` : ""}`}
+          aria-label={selectionCount ? t(selectionCount > 1 ? "launcher.ariaMany" : "launcher.ariaOne", { count: selectionCount }) : t("launcher.label")}
           initial={{ opacity: 0, y: 12, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.9 }}
@@ -31,7 +33,7 @@ function AnalysisLauncher({ className = "" }) {
           <span className="flex size-8 items-center justify-center rounded-full bg-sensor-accent/15 text-sensor-accent">
             <ChartLine aria-hidden="true" className="size-4" />
           </span>
-          Ver análisis
+          {t("launcher.label")}
           {selectionCount > 0 && (
             <span className="ml-0.5 flex size-5 items-center justify-center rounded-full bg-sensor-accent font-mono text-[11px] text-space-950">
               {selectionCount}

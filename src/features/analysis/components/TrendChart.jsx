@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { format } from '../utils/format.js'
+import { useT } from '@/i18n/useT'
 
 const seriesColors = ['var(--color-terra-400)', 'var(--color-aqua-400)']
 
@@ -25,6 +26,7 @@ function observedPath(points, x, y) {
 }
 
 export default function TrendChart({ series, from, to, unit }) {
+  const { t } = useT()
   const frame = useRef(null)
   const [width, setWidth] = useState(480)
 
@@ -54,8 +56,8 @@ export default function TrendChart({ series, from, to, unit }) {
   return (
     <figure ref={frame} aria-labelledby="trend-chart-title" className="min-w-0">
       <figcaption id="trend-chart-title" className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-        <span className="text-sm font-semibold">Serie anual</span>
-        <span className="text-xs text-ink-secondary">Puntos = promedios o totales · Guiones = tendencia</span>
+        <span className="text-sm font-semibold">{t('analysis.chart.title')}</span>
+        <span className="text-xs text-ink-secondary">{t('analysis.chart.key')}</span>
       </figcaption>
       {values.length ? (
         <AnnualPlot
@@ -63,9 +65,9 @@ export default function TrendChart({ series, from, to, unit }) {
           left={left} right={right} top={top} bottom={bottom} values={values} x={x} ticks={ticks}
         />
       ) : (
-        <p className="rounded-lg border border-hud-border p-4 text-sm text-ink-secondary">Sin años completos en este periodo.</p>
+        <p className="rounded-lg border border-hud-border p-4 text-sm text-ink-secondary">{t('analysis.chart.empty')}</p>
       )}
-      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-secondary" aria-label="Series del gráfico">
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-ink-secondary" aria-label={t('analysis.chart.seriesLabel')}>
         {series.map(({ id, label }, i) => (
           <li key={id} className="flex items-center gap-2">
             <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: seriesColors[i] }} />
@@ -79,13 +81,14 @@ export default function TrendChart({ series, from, to, unit }) {
 }
 
 function AnnualPlot({ series, unit, from, to, width, height, left, right, top, bottom, values, x, ticks }) {
+  const { t, locale } = useT()
   const scale = scaleValues(values)
   const y = value => top + (scale.high - value) * (height - top - bottom) / (scale.high - scale.low)
   return (
     <svg
       viewBox={`0 0 ${width} ${height}`}
       width="100%" height={height} role="img"
-      aria-label={`Serie anual en ${unit}, de ${from} a ${to}, con tendencia lineal`}
+      aria-label={t('analysis.chart.aria', { unit, from, to })}
       className="block rounded-lg bg-space-950/65"
     >
       <text x={left - 6} y={15} textAnchor="end" className="fill-ink-secondary text-xs">{unit}</text>
@@ -93,7 +96,7 @@ function AnnualPlot({ series, unit, from, to, width, height, left, right, top, b
         <g key={value}>
           <line x1={left} x2={width - right} y1={y(value)} y2={y(value)} className="stroke-hud-border" />
           <text x={left - 6} y={y(value) + 4} textAnchor="end" className="fill-ink-secondary text-xs">
-            {format(value, scale.digits)}
+            {format(value, scale.digits, locale)}
           </text>
         </g>
       ))}
@@ -114,7 +117,7 @@ function AnnualPlot({ series, unit, from, to, width, height, left, right, top, b
           )}
           {points.map(({ year, value }) => (
             <circle key={year} cx={x(year)} cy={y(value)} r="2.7" fill={seriesColors[i]}>
-              <title>{label} · {year} · {format(value)} {unit}</title>
+              <title>{label} · {year} · {format(value, 2, locale)} {unit}</title>
             </circle>
           ))}
         </g>
@@ -124,13 +127,14 @@ function AnnualPlot({ series, unit, from, to, width, height, left, right, top, b
 }
 
 function AnnualValues({ series, unit }) {
+  const { t, locale } = useT()
   return (
     <details className="mt-3 text-xs text-ink-secondary">
-      <summary className="cursor-pointer text-ink">Ver valores anuales</summary>
+      <summary className="cursor-pointer text-ink">{t('analysis.chart.values')}</summary>
       <table className="mt-2 w-full table-fixed text-left tabular-nums">
         <thead>
           <tr className="border-b border-hud-border">
-            <th scope="col" className="w-14 py-2">Año</th>
+            <th scope="col" className="w-14 py-2">{t('analysis.chart.year')}</th>
             {series.map(({ id, label }) => <th key={id} scope="col" className="py-2 pr-1">{label} ({unit})</th>)}
           </tr>
         </thead>
@@ -138,7 +142,7 @@ function AnnualValues({ series, unit }) {
           {series[0].points.map(({ year }, index) => (
             <tr key={year} className="border-b border-hud-border">
               <th scope="row" className="py-1.5 font-normal">{year}</th>
-              {series.map(({ id, points }) => <td key={id}>{format(points[index].value)}</td>)}
+              {series.map(({ id, points }) => <td key={id}>{format(points[index].value, 2, locale)}</td>)}
             </tr>
           ))}
         </tbody>

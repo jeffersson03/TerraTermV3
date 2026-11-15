@@ -53,5 +53,9 @@ export async function getPowerTimeSeries({ variable, location, period, signal, f
     resolution: `celda 0,5° × 0,625° (~${Math.round(cell.heightKm)} × ${Math.round(cell.widthKm)} km) · mensual`,
     kind: "estimate",
     notes: PARAMETER_NOTES[parameter] ?? null,
+    // Claves para mostrarlo en el idioma activo (SourceBadge); los textos de arriba son el respaldo
+    resolutionKey: "source.powerResolution",
+    resolutionVars: { height: Math.round(cell.heightKm), width: Math.round(cell.widthKm) },
+    notesKey: PARAMETER_NOTES[parameter] ? `source.powerNotes.${parameter}` : undefined,
   });
 }

@@ -1,6 +1,7 @@
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { CHART_THEME } from "@/components/charts/chartTheme";
 import { formatNumber } from "@/utils/formatValues";
+import { getLocale } from "@/i18n/languageStore";
 
 /**
  * Serie temporal multi-línea.
@@ -9,7 +10,9 @@ import { formatNumber } from "@/utils/formatValues";
  * @param {string} xKey          campo del eje X (por defecto 'year')
  * @param {string} unit
  */
-function TimeSeriesChart({ data, series, xKey = "year", unit, height = 200, ariaLabel }) {
+// `lang`: lo pasa ChartBlock; sirve para formatear ejes y tooltip en el idioma activo.
+function TimeSeriesChart({ data, series, xKey = "year", unit, height = 200, ariaLabel, lang }) {
+  const locale = getLocale(lang);
   return (
     <div role="img" aria-label={ariaLabel} style={{ height }} className="w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -21,12 +24,12 @@ function TimeSeriesChart({ data, series, xKey = "year", unit, height = 200, aria
             stroke={CHART_THEME.axis}
             tickLine={false}
             width={48}
-            tickFormatter={(value) => formatNumber(value)}
+            tickFormatter={(value) => formatNumber(value, 1, locale)}
             domain={["auto", "auto"]}
           />
           <Tooltip
             {...CHART_THEME.tooltip}
-            formatter={(value, name) => [`${formatNumber(value, 2)} ${unit ?? ""}`, name]}
+            formatter={(value, name) => [`${formatNumber(value, 2, locale)} ${unit ?? ""}`, name]}
           />
           {series.map((item) => (
             <Line

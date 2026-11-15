@@ -5,6 +5,7 @@ import { TREND_PALETTE, TREND_RANGE_C_PER_DECADE } from "@/constants/palettes";
 import { useTrendMapStore } from "@/features/map2d/hooks/useTrendMapStore";
 import { TREND_OPACITY } from "@/features/map2d/utils/trendColor";
 import { formatSigned } from "@/utils/formatValues";
+import { useT } from "@/i18n/useT";
 
 const GRADIENT = `linear-gradient(to right, ${TREND_PALETTE.join(", ")})`;
 
@@ -27,6 +28,8 @@ function TrendLegendPanel({ style }) {
   const retry = useTrendMapStore((state) => state.retry);
   const [showDetails, setShowDetails] = useState(false);
   const [min, max] = TREND_RANGE_C_PER_DECADE;
+  const { t, locale } = useT();
+  const unit = `°C/${t("units.decadeShort")}`;
 
   return (
     <div aria-live="polite" className="absolute z-20 transition-[bottom] duration-300" style={style}>
@@ -41,34 +44,35 @@ function TrendLegendPanel({ style }) {
             className="absolute bottom-full mb-2 w-full space-y-1.5 rounded-md border border-hud-border bg-space-900/95 p-3 text-[11px] text-ink-muted shadow-xl shadow-black/50 backdrop-blur-md"
           >
             <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px]">
-              <OpacityKey opacity={TREND_OPACITY.significant} label="significativa (p < 0,05)" />
-              <OpacityKey opacity={TREND_OPACITY.notSignificant} label="no significativa" />
+              <OpacityKey opacity={TREND_OPACITY.significant} label={t("trend.significantP")} />
+              <OpacityKey opacity={TREND_OPACITY.notSignificant} label={t("trend.notSignificant")} />
             </div>
             <p>
-              Cambio de la temperatura de superficie por década{period ? `, ${period.from}–${period.to}` : ""}.
+              {t("legend.trendMeaning")}
+              {period ? `, ${period.from}–${period.to}` : ""}.
             </p>
-            <p>Fuente: NASA POWER (MERRA-2) · TS · rejilla 0,5° × 0,625°.</p>
+            <p>{t("legend.trendSource")}</p>
           </motion.div>
         )}
       </AnimatePresence>
 
       <div className="flex items-center gap-2 rounded-md border border-hud-border bg-space-900/90 px-2.5 py-1.5 backdrop-blur-md">
-        <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink-secondary">°C/déc</span>
-        <span className="shrink-0 font-mono text-[10px] tabular-nums text-ink-muted">{formatSigned(min, 1)}</span>
-        <div className="relative h-2 min-w-0 flex-1 rounded-full" style={{ background: GRADIENT }} role="img" aria-label={`Escala de tendencia de ${min} a ${max} °C por década`}>
+        <span className="shrink-0 font-mono text-[10px] uppercase tracking-wider text-ink-secondary">{unit}</span>
+        <span className="shrink-0 font-mono text-[10px] tabular-nums text-ink-muted">{formatSigned(min, 1, locale)}</span>
+        <div className="relative h-2 min-w-0 flex-1 rounded-full" style={{ background: GRADIENT }} role="img" aria-label={t("legend.trendScale", { min, max })}>
           {status === "loading" && (
             <span className="absolute inset-0 flex items-center justify-center rounded-full bg-space-950/70 font-mono text-[9px] text-ink">
               NASA POWER {progress.total ? `${progress.done}/${progress.total}` : "…"}
             </span>
           )}
         </div>
-        <span className="shrink-0 font-mono text-[10px] tabular-nums text-ink-muted">{formatSigned(max, 1)}</span>
+        <span className="shrink-0 font-mono text-[10px] tabular-nums text-ink-muted">{formatSigned(max, 1, locale)}</span>
 
         {status === "error" ? (
           <button
             type="button"
             onClick={retry}
-            aria-label="Reintentar la descarga de la tendencia"
+            aria-label={t("legend.retry")}
             className="flex size-8 shrink-0 items-center justify-center rounded text-sensor-accent hover:bg-space-800"
           >
             <RotateCw aria-hidden="true" className="size-4" />
@@ -79,7 +83,7 @@ function TrendLegendPanel({ style }) {
             onClick={() => setShowDetails((value) => !value)}
             aria-expanded={showDetails}
             aria-controls="trend-legend-details"
-            aria-label="Detalles de la leyenda"
+            aria-label={t("legend.details")}
             className={`flex size-8 shrink-0 items-center justify-center rounded transition-colors hover:bg-space-800 ${showDetails ? "text-sensor-accent" : "text-ink-muted"}`}
           >
             <Info aria-hidden="true" className="size-4" />

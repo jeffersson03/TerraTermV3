@@ -3,6 +3,7 @@ import { geoBounds, geoCentroid } from "d3-geo";
 import { getCountry } from "@/constants/countries";
 import { useMapStore } from "@/stores/useMapStore";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
+import { t } from "@/i18n/useT";
 
 const ENTER_DELAY_MS = 900; // tiempo de vuelo antes del fundido al 2D
 const WORLD_DISTANCE = 3.2;
@@ -37,7 +38,8 @@ export function useCountryEntry() {
       const country = getCountry(feature.id);
       clearTimeout(timerRef.current);
       if (!country) {
-        showNotice(`${feature.properties?.name ?? "Este país"} aún no tiene mapa detallado. País piloto: Perú.`);
+        // El aviso se guarda ya traducido: dura unos segundos (NOTICE_MS)
+        showNotice(t("notice.noMap", { country: feature.properties?.name ?? t("notice.thisCountry") }));
         return;
       }
       timerRef.current = setTimeout(() => enterCountry(country.id), ENTER_DELAY_MS);

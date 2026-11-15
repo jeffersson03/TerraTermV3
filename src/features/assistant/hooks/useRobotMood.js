@@ -3,15 +3,10 @@ import { useEffect, useRef, useState } from "react";
 
 const HAPPY_MS = 2600;
 
-// Textos que acompañan a cada estado de la mascota.
-export const MOOD_LABEL = {
-  idle: "Esperando tu pregunta",
-  listening: "Te escucho…",
-  thinking: "Pensando…",
-  speaking: "Respondiendo…",
-  happy: "¡Listo!",
-  error: "Algo falló",
-};
+// Texto de cada estado de la mascota: clave de i18n (assistant.mood.<estado>).
+export function moodLabelKey(mood) {
+  return `assistant.mood.${mood}`;
+}
 
 /**
  * Traduce el estado del chat (assistant-ui) al estado de ánimo de la mascota:

@@ -9,10 +9,11 @@ import { trendColor } from "@/features/map2d/utils/trendColor";
 import { formatSigned } from "@/utils/formatValues";
 import { formatLatitude, formatLongitude } from "@/utils/formatCoordinates";
 import { formatNumber } from "@/utils/formatValues";
+import { useT } from "@/i18n/useT";
 
 const OFFSET = 18; // separación entre el cursor y la tarjeta
 const CARD_SIZE = { width: 220, height: 84 }; // tamaño aproximado para no salir de pantalla
-const SURFACE_LABEL = { land: "Tierra", ocean: "Océano" };
+const SURFACE_KEY = { land: "probe.land", ocean: "probe.ocean" };
 
 // Mira mínima alrededor del cursor (4 marcas con hueco central)
 function Reticle({ x, y }) {
@@ -42,6 +43,7 @@ function HoverProbe() {
   // Mapa 2D: tendencia térmica real de la zona bajo el cursor (NASA POWER), si ya está calculada
   const regionTrend = useTrendMapStore((state) => (location?.regionId ? state.trends.get(location.regionId) : null))?.trend;
   const viewport = useViewportSize();
+  const { t, locale } = useT();
 
   const isVisible = Boolean(location && location.screenX !== null);
   const x = location?.screenX ?? 0;
@@ -49,7 +51,7 @@ function HoverProbe() {
   const flipX = x + OFFSET + CARD_SIZE.width > viewport.width;
   const flipY = y + OFFSET + CARD_SIZE.height > viewport.height;
 
-  const placeName = location?.country ?? (reading ? SURFACE_LABEL[reading.surface] : "");
+  const placeName = location?.country ?? (reading ? t(SURFACE_KEY[reading.surface]) : "");
 
   // Sin animación de salida: al irse el cursor no hay posición a la que anclarla
   if (!isVisible) return null;
@@ -70,8 +72,8 @@ function HoverProbe() {
           <p className="mt-1 flex items-center gap-2 font-mono text-xs tabular-nums">
             <span className="h-2.5 w-2.5 shrink-0 rounded-[2px] ring-1 ring-ink/20" style={{ background: trendColor(regionTrend.slopePerDecade) }} />
             <span className="text-sensor-accent">TS</span>
-            <span className="text-ink">{formatSigned(regionTrend.slopePerDecade)} °C/déc</span>
-            <span className="text-[10px] text-ink-muted">{regionTrend.isSignificant ? "signif." : "no signif."}</span>
+            <span className="text-ink">{formatSigned(regionTrend.slopePerDecade, 2, locale)} °C/{t("units.decadeShort")}</span>
+            <span className="text-[10px] text-ink-muted">{regionTrend.isSignificant ? t("trend.significantShort") : t("trend.notSignificantShort")}</span>
           </p>
         )}
 
@@ -80,12 +82,12 @@ function HoverProbe() {
             <span className="h-2.5 w-2.5 shrink-0 rounded-[2px] ring-1 ring-ink/20" style={{ background: reading.color }} />
             <span className="text-sensor-accent">{reading.variable.shortLabel}</span>
             <span className="text-ink">
-              {formatNumber(reading.value)} {reading.variable.unit}
+              {formatNumber(reading.value, 1, locale)} {reading.variable.unit}
             </span>          </p>
         )}
 
         <p className="mt-1 font-mono text-[10px] tabular-nums text-ink-muted">
-          {formatLatitude(location.lat)} · {formatLongitude(location.lon)}
+          {formatLatitude(location.lat, locale)} · {formatLongitude(location.lon, locale)}
         </p>
       </div>
     </motion.div>

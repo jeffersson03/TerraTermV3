@@ -6,6 +6,8 @@ import { useRegionTrend } from "@/features/analysis/hooks/useRegionTrend";
 import { mergeByYear, toAnomalies } from "@/features/analysis/utils/aggregateSeries";
 import { getSensor } from "@/constants/sensors";
 import { combineStates } from "@/features/explorer/components/panels/combineStates";
+import { regionDisplayLabel } from "@/features/map2d/utils/regionModel";
+import { useT } from "@/i18n/useT";
 
 // Bloque reutilizable: tendencias de dos regiones, veredicto de dipolo y
 // series anuales como ANOMALÍAS (climas muy distintos se comparan mejor así).
@@ -20,11 +22,15 @@ function RegionComparison({ regions, variable, period }) {
     [regionA.id, regionB.id, queryA.annual, queryB.annual]
   );
 
+  const { t, tc } = useT();
+  const nameA = regionDisplayLabel(regionA, t);
+  const nameB = regionDisplayLabel(regionB, t);
   const series = [regionA, regionB].map((region) => ({
     key: region.id,
-    label: `${region.marker} · ${region.label}`,
+    label: `${region.marker} · ${regionDisplayLabel(region, t)}`,
     color: getSensor(region.sensorId).accent,
   }));
+  const unit = tc("variables", variable.id, "unit", variable.unit);
 
   const isLoading = queryA.isLoading || queryB.isLoading;
 
@@ -38,17 +44,21 @@ function RegionComparison({ regions, variable, period }) {
       <DipoleVerdict trendA={queryA.trend} trendB={queryB.trend} isLoading={isLoading} />
 
       <ChartBlock
-        title="Anomalía anual"
+        title={t("comparison.chartTitle")}
         type="timeSeries"
         state={combineStates(queryA, queryB)}
         meta={queryA.meta}
-        actions={<span className="font-mono text-[10px] text-ink-muted">{variable.unit}</span>}
+        actions={<span className="font-mono text-[10px] text-ink-muted">{unit}</span>}
         chartProps={{
           data: chartData,
           series,
-          unit: variable.unit,
+          unit,
           height: 190,
-          ariaLabel: `Anomalía anual de ${variable.label.toLowerCase()} en ${regionA.label} y ${regionB.label}`,
+          ariaLabel: t("comparison.chartAria", {
+            variable: tc("variables", variable.id, "label", variable.label).toLowerCase(),
+            a: nameA,
+            b: nameB,
+          }),
         }}
       />
     </div>

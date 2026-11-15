@@ -3,6 +3,8 @@ import { useRegionTrend } from "@/features/analysis/hooks/useRegionTrend";
 import { useFiltersStore } from "@/stores/useFiltersStore";
 import { getVariable } from "@/constants/variables";
 import { formatSigned } from "@/utils/formatValues";
+import { useT } from "@/i18n/useT";
+import { regionDisplayLabel } from "@/features/map2d/utils/regionModel";
 
 const DIRECTION_ICON = { increase: "▲", decrease: "▼", none: "■" };
 
@@ -19,17 +21,25 @@ function TrendValue({ region }) {
   const period = useFiltersStore((state) => state.period);
   const variable = resolveVariable(region, selectedVariableId);
   const { trend, isLoading, error, isEmpty } = useRegionTrend({ region, variableId: variable?.id, period });
+  const { t, tc, locale } = useT();
 
   if (!variable) return null;
   if (isLoading) return <span className="animate-pulse text-ink-muted"> · …</span>;
-  if (error || isEmpty || trend?.slopePerDecade == null) return <span className="text-ink-muted"> · sin datos</span>;
+  if (error || isEmpty || trend?.slopePerDecade == null) return <span className="text-ink-muted"> · {t("common.noData")}</span>;
 
+  const unit = tc("variables", variable.id, "unit", variable.unit);
   return (
-    <span className={trend.isSignificant ? "text-ink" : "text-ink-muted"} title={trend.isSignificant ? "Tendencia significativa (p < 0,05)" : "Tendencia no significativa"}>
+    <span className={trend.isSignificant ? "text-ink" : "text-ink-muted"} title={trend.isSignificant ? t("trend.significantLong") : t("trend.notSignificantLong")}>
       {" · "}
-      <span aria-hidden="true">{DIRECTION_ICON[trend.direction]}</span> {formatSigned(trend.slopePerDecade)} {variable.unit}/déc
+      <span aria-hidden="true">{DIRECTION_ICON[trend.direction]}</span> {formatSigned(trend.slopePerDecade, 2, locale)} {unit}/{t("units.decadeShort")}
     </span>
   );
+}
+
+// Nombre de la zona en el idioma activo (las celdas de mar se rearman al cambiar de idioma)
+function RegionName({ region }) {
+  const { t } = useT();
+  return regionDisplayLabel(region, t);
 }
 
 // Etiquetas "A · Piura · ▲ +0,31 °C/déc" sobre las zonas seleccionadas, con su color de ranura.
@@ -58,7 +68,7 @@ function SelectionLabels({ projection, width, selectedRegions }) {
               <span className="h-2 w-2 rounded-full bg-sensor-accent" />
             </span>
             <span className={`absolute ${side} top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border border-sensor-accent/60 bg-space-950/90 px-2.5 py-0.5 text-xs text-sensor-accent`}>
-              <span className="font-mono">{region.marker}</span> · {region.label}
+              <span className="font-mono">{region.marker}</span> · <RegionName region={region} />
               <span className="font-mono tabular-nums">
                 <TrendValue region={region} />
               </span>

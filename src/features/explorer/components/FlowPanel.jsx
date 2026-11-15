@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { PANELS, resolvePanelId } from "@/features/explorer/components/panelRegistry";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
+import { useT } from "@/i18n/useT";
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -11,6 +12,7 @@ function FlowPanel() {
   const level = useExplorerStore((state) => state.level);
   const stepId = useExplorerStore((state) => state.stepId);
   const selectedRegions = useExplorerStore((state) => state.selectedRegions);
+  const { t } = useT();
 
   const panelId = resolvePanelId(stepId, selectedRegions);
   // Acceso directo al registro (no una función): componentes estáticos para React
@@ -18,7 +20,7 @@ function FlowPanel() {
   const contentKey = `${panelId}:${selectedRegions.map((region) => region.id).join("|")}`;
 
   if (!Panel) {
-    return <p className="p-5 text-sm text-ink-secondary">Elige un país en el globo para explorar sus zonas.</p>;
+    return <p className="p-5 text-sm text-ink-secondary">{t("flow.chooseCountry")}</p>;
   }
 
   return (

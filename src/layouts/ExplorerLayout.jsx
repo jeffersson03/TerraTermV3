@@ -4,6 +4,7 @@ import { useDockStore } from "@/stores/useDockStore";
 import { AssistantFab, AssistantProvider } from "@/features/assistant";
 import { useExplorerStore } from "@/features/explorer/hooks/useExplorerStore";
 import IntroSplash from "@/features/intro/components/IntroSplash";
+import LanguageSwitch from "@/components/Hud/LanguageSwitch";
 
 // Robot flotante: solo en el globo 3D (en el 2D el asistente es una pestaña junto a Tendencias).
 // En móvil va arriba a la derecha para no tapar la consola del sensor; en pantallas grandes, abajo.
@@ -23,11 +24,12 @@ function ExplorerLayout() {
   return (
     <AssistantProvider>
       <div data-sensor={domain} className="relative flex h-dvh w-full flex-col overflow-hidden bg-space-950 text-ink">
-        {/* Barra superior: solo el logo */}
-        <header className="flex h-11 shrink-0 items-center border-b border-hud-border bg-space-900/90 px-4 backdrop-blur-md sm:h-12">
+        {/* Barra superior: logo + selector de idioma */}
+        <header className="flex h-11 shrink-0 items-center justify-between border-b border-hud-border bg-space-900/90 px-4 backdrop-blur-md sm:h-12">
           <span className="text-sm font-semibold uppercase tracking-[0.08em]">
             Terra<span className="text-sensor-accent">Term</span>
           </span>
+          <LanguageSwitch />
         </header>
 
         {/* Área de trabajo */}

@@ -1,6 +1,7 @@
 // Ruta relativa (no `@/`): los tests de `node --test` importan este módulo y Node no resuelve el alias de Vite.
 import { powerCoverage, powerUrl } from '../../../services/nasa/powerService.js'
 import { format } from './format.js'
+import { getLocale } from '../../../i18n/languageStore.js'
 import { analyzeTrend, findLevelShift } from './trend.js'
 
 export const variables = {
@@ -25,7 +26,7 @@ export const variables = {
 }
 
 export const places = {
-  ica: { label: 'Ica', latitude: '14,07° S', longitude: '75,73° O', elevation: '1.320 m', lat: -14.07, lon: -75.73 },
+  ica: { label: 'Ica', latitude: '14,07° S', longitude: '75,73° O', elevation: '1.320 m', elevationM: 1320, lat: -14.07, lon: -75.73 },
   pisco: { label: 'Mar frente a Pisco', latitude: '14,00° S', longitude: '77,00° O', lat: -14, lon: -77 },
   compare: { label: 'Ica y mar frente a Pisco' },
   custom: { label: 'Otro lugar (consulta en vivo)' },
@@ -38,9 +39,11 @@ export function periodFor(variable, place) {
     : { ...powerCoverage }
 }
 
-export function formatCoordinate(value, axis, digits = 2) {
-  const hemisphere = axis === 'latitude' ? (value < 0 ? 'S' : 'N') : (value < 0 ? 'O' : 'E')
-  return `${format(Math.abs(value), digits)}° ${hemisphere}`
+// En componentes pasa el `locale` de useT() (React Compiler memoriza por argumentos)
+export function formatCoordinate(value, axis, digits = 2, locale = getLocale()) {
+  const west = locale.startsWith('en') ? 'W' : 'O'
+  const hemisphere = axis === 'latitude' ? (value < 0 ? 'S' : 'N') : (value < 0 ? west : 'E')
+  return `${format(Math.abs(value), digits, locale)}° ${hemisphere}`
 }
 
 // Definición de un punto consultado en vivo, con la misma forma que los lugares guardados.
@@ -50,6 +53,7 @@ export function customPlace({ latitude, longitude, elevation, version, fetchedAt
     ...shown, label: `${shown.latitude}, ${shown.longitude}`, lat: latitude, lon: longitude,
     elevation: Number.isFinite(elevation)
       ? `${String(Math.round(elevation)).replace(/\B(?=(\d{3})+$)/g, '.')} m` : undefined,
+    elevationM: Number.isFinite(elevation) ? Math.round(elevation) : undefined, // la interfaz la formatea según el idioma
     live: { version, fetchedAt },
   }
 }

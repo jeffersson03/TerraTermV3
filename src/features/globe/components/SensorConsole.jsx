@@ -5,6 +5,7 @@ import DomainSwitcher from "@/features/globe/components/DomainSwitcher";
 import LayerInfo from "@/features/globe/components/LayerInfo";
 import { describeLayer } from "@/features/globe/utils/describeLayer";
 import { getSensor } from "@/constants/sensors";
+import { useT } from "@/i18n/useT";
 
 const SWAP = { duration: 0.25, ease: [0.22, 1, 0.36, 1] };
 
@@ -15,6 +16,7 @@ const SWAP = { duration: 0.25, ease: [0.22, 1, 0.36, 1] };
 function SensorConsole({ domain, onChange }) {
   const sensor = getSensor(domain);
   const layer = describeLayer(sensor, "globe");
+  const { tc } = useT();
 
   return (
     <div data-sensor={domain} className="w-[24rem] max-w-[calc(100vw-2rem)]">
@@ -34,7 +36,7 @@ function SensorConsole({ domain, onChange }) {
                   {sensor.label}
                   {sensor.sensor && <span className="text-ink-muted"> // {sensor.sensor}</span>}
                 </p>
-                <p className="truncate text-sm font-semibold text-ink">{layer.title}</p>
+                <p className="truncate text-sm font-semibold text-ink">{tc("sensors", domain, "layerTitle", layer.title)}</p>
               </motion.div>
             </AnimatePresence>
           </div>
